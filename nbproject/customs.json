@@ -1,0 +1,15 @@
+{
+    "elements": {
+        "md-button": {},
+        "md-input-container": {}
+    },
+    "attributes": {
+        "layout": {
+            "context": "div"
+        },
+        "%": {},
+        "flex": {
+            "context": "div"
+        }
+    }
+}
