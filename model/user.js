@@ -8,7 +8,7 @@ var UserSchema = new Schema({
     name: {
         firstName: {type: String},
         lastName: {type: String},
-        lastName: {type: String}
+        username: {type: String}
     }
     ,
     email: {type: String, required: true, unique: true},
@@ -16,7 +16,7 @@ var UserSchema = new Schema({
     staff : {
         isStaff : Boolean, 
         staffId : String,
-        department : String
+        privilege : String
     },
     sex : String,
     dob : Date,

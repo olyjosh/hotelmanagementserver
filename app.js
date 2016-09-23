@@ -5,10 +5,9 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
-
 var config = require('./bin/config');
-
 var routes = require('./routes/index');
+var doc = require('./routes/doc');
 
 
 var app = express();
@@ -17,7 +16,7 @@ mongoose.Promise = global.Promise;
 //mongoose.connect('mongodb://localhost/green');
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
-
+var jwt = require('jsonwebtoken');
 
 var m = config.mongo;
 
@@ -33,7 +32,7 @@ var User = require('./model/user');
 
 passport.use(new LocalStrategy(
   function(username, password, done) {
-    User.findOne({ username: username }, function (err, user) {
+    User.findOne({ 'name.username': username }, function (err, user) {
       if (err) { return done(err); }
       if (!user) {
         return done(null, false, { status:0, message: 'Incorrect username.' });
@@ -64,40 +63,69 @@ global.appRoot = path.resolve(__dirname);
 var imgDir = global.appRoot+'/res/images/profile_images/';
 
 app.use('/', routes); 
+app.use('/doc',doc);
+
+//var logger = function(req, res, next) {
+//    console.log("GOT REQUEST !");
+//    console.log(req.headers);
+//    next(); // Passing the request to the next handler in the stack.
+//}
+//
 
 
-app.post('/api/reg', function (req, res) {
-    var respon={status:0};
-    var email = req.body.email;
-    var first = req.body.firstName;
-    var last = req.body.lastName;
-    var pass = req.body.password;
-    var phone = req.body.phone;
-
-    var User = require('./model/user');
-// create a new user called chris
-    var chris = new User({
-        name : { firstName:first, lastName: last},
-        email: email,
-        phone: phone,
-        password: pass
-
-    });
-// call the built-in save method to save to the database
-    chris.save(function (err) {
-        if (err){
-            throw err;
-        }
-
-        console.log('User saved successfully!');
-        respon={status:1};
-        res.send(JSON.stringify(respon));
-    });
-    
-});
+var verifyAuth = function (req, res, next) {
+    var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1N2RlY2E1ZDM1ZmI5YTQ4N2JkZWI3MGYiLCJlbWFpbCI6Im9seWpvc2hvbmVAZ21haWwuY29tIiwibmFtZSI6eyJ1c2VybmFtZSI6ImFkbWluIiwiZmlyc3ROYW1lIjoiQWRtaW4iLCJsYXN0TmFtZSI6IkFkbWluIn0sImV4cCI6MTQ3NDgyMzM4OSwiaWF0IjoxNDc0MjE4NTg5fQ.bJIh7STXSMU2o4qNuG4SrsPlK4wYL2JeGvXZxgKM_Os";
+    jwt.verify(token,
+            'MY_SECRET'
+//    app.get('MY_SECRET')
+            , function (err, decoded) {
+                if (err) {
+                    return res.json({status: 0, message: 'Failed to authenticate token.'});
+                } else {
+                    // if everything is good, save to request for use in other routes
+                    console.log("The Token ::::::::::::");
+                    console.log(decoded);
+//                    res.decoded = decoded;
+                    next();
+                }
+            });
+//    next();
+}
 
 
-app.post('/api/auth/register', function(req, res, next){
+app.use(verifyAuth); 
+//app.post('/api/reg', function (req, res) {
+//    var respon={status:0};
+//    var email = req.body.email;
+//    var first = req.body.firstName;
+//    var last = req.body.lastName;
+//    var pass = req.body.password;
+//    var phone = req.body.phone;
+//
+//    var User = require('./model/user');
+//// create a new user called chris
+//    var chris = new User({
+//        name : { firstName:first, lastName: last},
+//        email: email,
+//        phone: phone,
+//        password: pass
+//
+//    });
+//// call the built-in save method to save to the database
+//    chris.save(function (err) {
+//        if (err){
+//            throw err;
+//        }
+//
+//        console.log('User saved successfully!');
+//        respon={status:1};
+//        res.send(JSON.stringify(respon));
+//    });
+//    
+//});
+
+
+app.post('/api/register', function(req, res, next){
   if(!req.body.username || !req.body.password){
     return res.status(400).json({status:0 ,message: 'Please fill out all fields'});
   }
@@ -105,18 +133,22 @@ app.post('/api/auth/register', function(req, res, next){
   var User = require('./model/user');
   var user = new User();
 
-//var email = req.body.email;
-//    var first = req.body.firstName;
-//    var last = req.body.lastName;
-//    var pass = req.body.password;
-//    var phone = req.body.phone;
-    
-    
-  user.username = req.body.username;
+  user.name.username = req.body.username;
   user.name.firstName =req.body.firstName;
   user.name.lastName = req.body.lastName;
   user.email = req.body.email;
   user.phone = req.body.phone;
+  var staff = req.body.isStaff;
+  if(staff){
+      user.staff.isStaff = true;
+      user.staff.staffId = "00001"
+      user.privilege = req.body.privilege
+  }else{
+      user.staff.isStaff = false;
+  }
+  user.sex = req.body.sex;
+  user.dob = req.body.dob;
+  user.country = req.body.country;
 
   user.setPassword(req.body.password)
 
@@ -130,7 +162,7 @@ app.post('/api/auth/register', function(req, res, next){
 });
 
 
-app.post('/api/auth/login', function(req, res, next){
+app.post('/api/login', function(req, res, next){
   if(!req.body.username || !req.body.password){
     return res.status(400).json({message: 'Please fill out all fields'});
   }
@@ -139,7 +171,8 @@ app.post('/api/auth/login', function(req, res, next){
     if(err){ return next(err); }
 
     if(user){
-      return res.json({status:1 ,token: user.generateJWT()});
+      delete user.hash;
+      return res.json({status:1 ,token: user.generateJWT(), user : user});
     } else {
       return res.status(401).json(info);
     }
@@ -228,8 +261,6 @@ app.post('/api/createBlogPost', function (req, res) {
         console.log(post);
         res.send(JSON.stringify(respon));
     });
-    
-    
 });
 
 // read blog post here soon
@@ -238,9 +269,7 @@ app.post('/api/createBlogPost', function (req, res) {
 app.post('/api/deleteBlogPost', function (req, res) {
 
     var respon={status:0};
-
     var postid = req.body.id;
-
     var Post = require('./model/blogPost');
     
     Post.find({ id:postid }).remove( function(err){

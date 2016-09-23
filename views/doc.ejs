@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<!--[if IE 9]><html class="ie ie9"> <![endif]-->
+<html >
+    <head>
+        <title>
+            API Documentations - Hotel Management Web services
+        </title></head>
+        <body>
+
+            <h1>API Documentations - Hotel Management Web services</h1>
+            <br>
+            <h2>API Endpoint url</h2>
+            url/api/
+
+            </br>http://192.168.0.197:9016/
+
+            <h2>1. User authentication - POST</h2>
+            <p><h3>create a user - POST</h3>
+            function : register 
+            <br>i.e POST http://192.168.0.197:9016/api/register
+            <br><br><i>request parameters</i>
+            <br>firstName
+            <br>lastName
+            <br>username
+            <br>email
+            <br>phone
+            <br>isStaff  (value can either be true or false)
+            <br>privilege   (this is only require when adding staff i.e when isStaff=true. value can be any of ADMIN, FO -front office,HK -house keeping,MB -Minibar,LA-laundry, BA - Banquest, MA - maintenance, RE - restaurant manager)
+            <br>sex    (value can either be "MALE" or "FEMALE")
+            <br>dob    (date in this format "1991-09-03")
+            <br>country 
+            <br>password
+
+            <br><br>sample arguments : firstName=Admin&lastName=Admin&username=admin&email=olyjoshone@gmail.com&phone=08061662025&isStaff=true&privilege=ADMIN&sex=MALE&dob=1991-09-03&country=Nigeria&password=123456
+            <br><br>sample response : {"status":1,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1N2RlY2E1ZDM1ZmI5YTQ4N2JkZWI3MGYiLCJlbWFpbCI6Im9seWpvc2hvbmVAZ21haWwuY29tIiwibmFtZSI6eyJ1c2VybmFtZSI6ImFkbWluIiwiZmlyc3ROYW1lIjoiQWRtaW4iLCJsYXN0TmFtZSI6IkFkbWluIn0sImV4cCI6MTQ3NDgyMzM4OSwiaWF0IjoxNDc0MjE4NTg5fQ.bJIh7STXSMU2o4qNuG4SrsPlK4wYL2JeGvXZxgKM_Os"}
+            <br><br><br><br>
+            </p>
+            
+            
+                        <p><h3>login a user - POST</h3>
+            function : login 
+            <br>i.e POST http://192.168.0.197:9016/api/login
+            <br><br><i>request parameters</i>
+
+            <br>username
+            <br>email
+            <br>password
+
+            <br><br>sample arguments : firstName=Admin&lastName=Admin&username=admin&email=olyjoshone@gmail.com&phone=08061662025&isStaff=true&privilege=ADMIN&sex=MALE&dob=1991-09-03&country=Nigeria&password=123456
+            <br><br>sample response : {"status":1,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1N2RlY2E1ZDM1ZmI5YTQ4N2JkZWI3MGYiLCJlbWFpbCI6Im9seWpvc2hvbmVAZ21haWwuY29tIiwibmFtZSI6eyJ1c2VybmFtZSI6ImFkbWluIiwiZmlyc3ROYW1lIjoiQWRtaW4iLCJsYXN0TmFtZSI6IkFkbWluIn0sImV4cCI6MTQ3NDgyNzc0OSwiaWF0IjoxNDc0MjIyOTQ5fQ.kFiqPr_YRvboz3lDt8E0b0XXvxjBtJDqLve4yvks2xY","user":{"_id":"57deca5d35fb9a487bdeb70f","updatedAt":"2016-09-18T17:09:49.276Z","createdAt":"2016-09-18T17:09:49.276Z","hash":"72ba120aff4fb0a3e40d8b812ba1aee04d51d018a7af80fe9b06e1f2ea542ae5b0079599c81bb00ca6eb5cc5814ab5e583f2e34943838f7e17fb00f0d0cd0dca","salt":"15b3c42a9f27eaa0616581c1c4507f76","country":"Nigeria","dob":"1991-09-03T00:00:00.000Z","sex":"MALE","phone":"08061662025","email":"olyjoshone@gmail.com","__v":0,"staff":{"staffId":"00001","isStaff":true},"name":{"lastName":"Admin","firstName":"Admin","username":"admin"}}}
+
+            <br><br><br><br>
+            </p>
+            
+
+
+            
+
+        </body>
+</html>

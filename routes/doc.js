@@ -3,9 +3,9 @@ var router = express.Router();
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-  res.render('index', 
+  res.render('doc', 
   { 
-      title: 'Hotel Management Webservices' , 
+      title: 'API Documentaions - Hotel Management Webservices' , 
       meta: {
           viewport:"width=device-width, initial-scale=1",
           keyword:"",
