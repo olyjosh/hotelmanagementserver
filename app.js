@@ -65,65 +65,28 @@ var imgDir = global.appRoot+'/res/images/profile_images/';
 app.use('/', routes); 
 app.use('/doc',doc);
 
-//var logger = function(req, res, next) {
-//    console.log("GOT REQUEST !");
-//    console.log(req.headers);
-//    next(); // Passing the request to the next handler in the stack.
-//}
-//
-
 
 var verifyAuth = function (req, res, next) {
-    var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1N2RlY2E1ZDM1ZmI5YTQ4N2JkZWI3MGYiLCJlbWFpbCI6Im9seWpvc2hvbmVAZ21haWwuY29tIiwibmFtZSI6eyJ1c2VybmFtZSI6ImFkbWluIiwiZmlyc3ROYW1lIjoiQWRtaW4iLCJsYXN0TmFtZSI6IkFkbWluIn0sImV4cCI6MTQ3NDgyMzM4OSwiaWF0IjoxNDc0MjE4NTg5fQ.bJIh7STXSMU2o4qNuG4SrsPlK4wYL2JeGvXZxgKM_Os";
-    jwt.verify(token,
-            'MY_SECRET'
-//    app.get('MY_SECRET')
-            , function (err, decoded) {
-                if (err) {
-                    return res.json({status: 0, message: 'Failed to authenticate token.'});
-                } else {
-                    // if everything is good, save to request for use in other routes
-                    console.log("The Token ::::::::::::");
-                    console.log(decoded);
-//                    res.decoded = decoded;
-                    next();
-                }
-            });
-//    next();
+//    console.log(JSON.stringify(req.headers.token));
+    if (req.url.startsWith("/api/op/")) {
+        var token = req.headers.token; //"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1N2RlY2E1ZDM1ZmI5YTQ4N2JkZWI3MGYiLCJlbWFpbCI6Im9seWpvc2hvbmVAZ21haWwuY29tIiwibmFtZSI6eyJ1c2VybmFtZSI6ImFkbWluIiwiZmlyc3ROYW1lIjoiQWRtaW4iLCJsYXN0TmFtZSI6IkFkbWluIn0sImV4cCI6MTQ3NDgyMzM4OSwiaWF0IjoxNDc0MjE4NTg5fQ.bJIh7STXSMU2o4qNuG4SrsPlK4wYL2JeGvXZxgKM_Os";
+        jwt.verify(token, 'MY_SECRET'  //    app.get('MY_SECRET')
+                , function (err, decoded) {
+                    if (err) {
+                        // Failed token
+                        return res.json({status: 0, message: 'Invalid authentication, Please login'});
+                    } else {
+                        //Proceed with the operations
+                        // You can also do stuff with the decoded token
+                        next();
+                    }
+                });
+    }else{
+        next();
+    }
 }
 
-
 app.use(verifyAuth); 
-//app.post('/api/reg', function (req, res) {
-//    var respon={status:0};
-//    var email = req.body.email;
-//    var first = req.body.firstName;
-//    var last = req.body.lastName;
-//    var pass = req.body.password;
-//    var phone = req.body.phone;
-//
-//    var User = require('./model/user');
-//// create a new user called chris
-//    var chris = new User({
-//        name : { firstName:first, lastName: last},
-//        email: email,
-//        phone: phone,
-//        password: pass
-//
-//    });
-//// call the built-in save method to save to the database
-//    chris.save(function (err) {
-//        if (err){
-//            throw err;
-//        }
-//
-//        console.log('User saved successfully!');
-//        respon={status:1};
-//        res.send(JSON.stringify(respon));
-//    });
-//    
-//});
-
 
 app.post('/api/register', function(req, res, next){
   if(!req.body.username || !req.body.password){
@@ -172,11 +135,389 @@ app.post('/api/login', function(req, res, next){
 
     if(user){
       delete user.hash;
+      
       return res.json({status:1 ,token: user.generateJWT(), user : user});
     } else {
       return res.status(401).json(info);
     }
   })(req, res, next);
+});
+
+/*
+ * All other operation here the involve using token authentication to access
+ */
+
+app.get('/api/op/create/room', function (req, res, next) {
+    var Facility = require('./model/facility');
+    var fac = new Facility();
+    var q = req.query;
+
+    fac.alias = q.alias;
+    fac.name = q.name;
+    fac.desc = q.desc;
+    fac.roomType = q.roomType;
+    fac.floor = q.floor;
+    fac.roomStatus.state = q.roomStatus_state; /* Can be any of dirty, disOrder, ok*/
+    fac.roomStatus.bookedStatus = q.roomStatus_bookedStatus; /* booked, reserved, checkedIn, checkedOut none*/
+
+    fac.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
+    });
+});
+
+app.get('/api/op/fetch/room', function(req, res, next){
+  var Colle = require('./model/facility');
+//  mongoose.Model('RoomType', roomType);
+//  mongoose.Model('Floor', floor);
+    Colle.find({}, function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+    
+    
+//    Colle.find().populate('roomType').exec( function (err, data) {
+//        if (err) {
+//            return next(err);
+//        }
+//        return res.json({status:1, message : data});
+//    });
+    
+});
+
+app.get('/api/op/fetch/room2', function(req, res, next){
+  var Colle = require('./model/facility');
+    require('./model/roomType');
+    require('./model/floors');
+    Colle.find().populate('floor').exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+    
+});
+
+
+app.get('/api/op/edit/room', function(req, res, next){
+  
+});
+
+app.get('/api/op/delete/room', function(req, res, next){
+  var id = req.query.id;
+    var Post = require('./model/facility');
+
+    Post.find({id: id}).remove(function (err) {
+        if (err)
+            throw err
+//        respon = {status: 1};
+//        res.send(JSON.stringify(respon));
+        return res.json({status:1, message : data});
+    })
+});
+
+app.get('/api/op/create/floor', function (req, res, next) {
+
+    var Floor = require('./model/floors');
+    var floor = new Floor();
+    floor.alias = req.query.alias;
+    floor.name = req.query.name;
+    floor.desc = req.query.desc;
+    console.log(req.query);
+
+    floor.save(function (err, data) {
+        if (err) {
+            return next(err);
+            return error.stack;
+console.log(error.stack);
+        }
+        return res.json({status: 1, message: data});
+    });
+});
+
+app.get('/api/op/fetch/floor', function(req, res, next){
+    var Floor = require('./model/floors');
+    Floor.find({}, function (err, data) {
+        if (err) {
+//            throw err;
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+//        respon = {status: 1, posts: posts};
+//        res.send(JSON.stringify(respon));
+    });
+});
+
+app.get('/api/op/edit/floor', function(req, res, next){
+  
+});
+
+app.get('/api/op/delete/floor', function (req, res, next) {
+    var floorId = req.query.id;
+    var Post = require('./model/floors');
+
+    Post.find({id: floorId}).remove(function (err) {
+        if (err)
+            throw err
+        respon = {status: 1};
+        res.send(JSON.stringify(respon));
+    })
+});
+
+// roomType stuffs
+app.get('/api/op/create/roomtype', function(req, res, next){
+   
+    var RoomType = require('./model/roomType');
+    var roomType = new RoomType();
+    var q = req.query;
+    
+    roomType.alias = q.alias;
+    roomType.name = q.name;
+    roomType.desc = q.desc;
+
+    roomType.rate.rate = q.rate_rate;
+    roomType.rate.adult = q.rate_adult;
+    roomType.rate.child = q.rate_child;
+    roomType.rate.overBookingPercentage = q.rate_overBookingPercentage;
+
+    roomType.pax.baseAdult = q.pax_baseAdult;
+    roomType.pax.baseChild = q.pax_baseChild;
+    roomType.pax.maxAdult = q.pax_maxAdult;
+    roomType.pax.maxChild = q.pax_maxChild
+    roomType.displayColor = q.color
+
+    roomType.save(function (err, data) {
+        if (err) { 
+        return next(err); 
+    }
+    return res.json({status:1, message : data});
+  });
+});
+
+app.get('/api/op/fetch/roomtype', function(req, res, next){
+    var Collec = require('./model/roomType');
+    Collec.find({}, function (err, data) {
+        if (err) {
+//            throw err;
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+//        respon = {status: 1, posts: posts};
+//        res.send(JSON.stringify(respon));
+    });
+});
+
+
+
+app.get('/api/op/edit/roomtype', function(req, res, next){
+  
+});
+
+app.get('/api/op/delete/roomtype', function (req, res, next) {
+    var id = req.query.id;
+    var Collec = require('./model/roomType');
+
+    Collec.find({id: id}).remove(function (err) {
+        if (err)
+            throw err
+        respon = {status: 1};
+        res.send(JSON.stringify(respon));
+    })
+});
+
+
+// Booking
+
+
+app.get('/api/op/create/book', function(req, res, next){
+   
+    var Book = require('./model/booking');
+    var book = new Book();
+    var q = req.query;
+    book.status = q.status
+    book.room = q.room;
+//    var customer = q.customer;
+//    if (customer != null) {
+//        book.customer = customer;
+//    }
+    book.channel = q.channel; /* any of online, web, frontDesk*/
+    book.performedBy = q.performedBy;
+    book.amount = q.amount;
+    book.checkIn = q.checkIn;
+    book.checkOut = q.checkOut;
+//    book.guestId = q.phone;
+    book.guest.firstName = q.firstName;
+    book.guest.lastName = q.lastName;
+    book.guest.phone = q.phone;
+    
+
+    var s = createGuest (q);
+    console.log(s);
+    book.save(function (err, data) {
+        if (err) { 
+        return next(err); 
+    }
+    return res.json({status:1, message : data});
+  });
+});
+
+var createGuest = function (q) {
+        
+    var Guest = require('./model/guest');
+    var gue = new Guest();
+    gue.name.lastName = q.lastName;
+    gue.name.firstName = q.firstName;
+    gue.email = q.email;
+    gue.phone = q.phone;
+    gue.address = q.address;
+    
+//    gue.save({ upsert : true },function (err, data) {
+//        if (err) {
+//            return next(err);
+//        }
+//    });
+//    var ret;
+    return Guest.findOneAndUpdate({ phone: q.phone }, gue.toObject(), { upsert : true }, function (err, data) {
+        if (err) {
+//            return next(err);
+            console.log();
+        }
+        return data;
+    });
+//    return ret;
+}
+
+
+//app.get('/api/op/create/book', function(req, res, next){
+//   
+//    var Book = require('./model/booking');
+//    var book = new Book();
+//    var q = req.query;
+//    book.status = q.status
+//    book.isCancel = q.iscancel;
+//    book.room = q.room;
+//    var customer = q.customer;
+//    if (customer != null) {
+//        book.customer = customer;
+//    }
+//    book.channel = q.channel; /* any of online, web, frontDesk*/
+//    book.performedBy = q.performedBy;
+//    book.amount = q.amount;
+//    book.discount = q.discount;
+//    book.isCheckIn = q.isCheckIn;
+//
+//    book.payment.paid = q.payment_paid;
+//    book.payment.amount = q.payment_amount;
+//    book.payment.type = q.payment_type;/*Cash, online, Mobile, Pos*/
+//    book.payment.tax = q.payment_tax;
+//    book.payment.refId = q.payment_refId;
+//    book.payment.time = q.payment_time;
+//    
+//    
+//    book.save(function (err, data) {
+//        if (err) { 
+//        return next(err); 
+//    }
+//    return res.json({status:1, message : data});
+//  });
+//});
+
+app.get('/api/op/fetch/book', function(req, res, next){
+    var Collec = require('./model/booking');
+    Collec.find({}, function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+//        respon = {status: 1, posts: posts};
+//        res.send(JSON.stringify(respon));
+    });
+});
+
+app.get('/api/op/edit/book', function(req, res, next){
+  
+});
+
+app.get('/api/op/delete/book', function (req, res, next) {
+    var id = req.query.id;
+    var Collec = require('./model/booking');
+
+    Collec.find({id: id}).remove(function (err) {
+        if (err)
+            throw err
+        respon = {status: 1};
+        res.send(JSON.stringify(respon));
+    })
+});
+
+app.get('/api/op/cancel/book', function(req, res, next){
+    
+});
+
+
+//Guest list and Guest Messages
+app.get('/api/op/fetch/guests', function(req, res, next){
+    var Collec = require('./model/guest');
+    //isCheckIn : false,
+    Collec.find({$and: [ {isCheckIn: true },{ "staff.isStaff":false}]}, function (err, data) {
+        if (err) {
+//            throw err;
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+//        respon = {status: 1, posts: posts};
+//        res.send(JSON.stringify(respon));
+    });
+});
+
+app.get('/api/op/fetch/customers', function(req, res, next){
+    var Collec = require('./model/guest');
+    //isCheckIn : false,
+    Collec.find({}, function (err, data) {
+        if (err) {
+//            throw err;
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+//        respon = {status: 1, posts: posts};
+//        res.send(JSON.stringify(respon));
+    });
+});
+
+
+app.get('/api/op/fetch/message', function(req, res, next){
+    var Collec = require('./model/message');
+    //isCheckIn : false,
+    var q = req.query;
+    var phone = q.phone;
+    Collec.find({$or: [ {from: phone },{ to:phone}]}, function (err, data) {
+        if (err) {
+//            throw err;
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+
+    });
+});
+
+app.get('/api/op/create/message', function(req, res, next){
+   
+    var Message = require('./model/message');
+    var msg = new Message();
+    var q = req.query;
+    msg.from = q.from;
+    msg.to = q.to;
+    msg.message = q.message;
+    msg.save(function (err, data) {
+        if (err) { 
+        return next(err); 
+    }
+    return res.json({status:1, message : data});
+  });
 });
 
 app.get('/api/post', function (req, res) {
@@ -192,6 +533,8 @@ app.get('/api/post', function (req, res) {
     });
 
 });
+
+
 
 app.get('/api/postAll', function (req, res) {
     var respon = {status: 0};
@@ -278,7 +621,7 @@ app.post('/api/deleteBlogPost', function (req, res) {
         console.log('DELETED');
         respon={status:1};
         res.send(JSON.stringify(respon));
-    })
+    });
     
 });
 

@@ -1,14 +1,21 @@
 var mongoose = require('mongoose');
+var k = require('./const')
 var Schema = mongoose.Schema;
 
+
 var facilitySchema = new Schema({
-  facility: String,
-  roomNumber: Number,
+  alias : {type: String, required: true, unique: true},
+  name: {type: String, required: true},
+  desc: String,
+  roomType : {type : mongoose.Schema.Types.ObjectId , ref : 'RoomType'},
+  floor : {type : mongoose.Schema.Types.ObjectId , ref : 'Floor'},
   roomStatus : { 
-      state : String /* Can be any of dirty, disOrder, clean*/, 
-      bookedStatus : String /* booked, reserved, checkedIn, checkedOut none*/
+      state : { type: String, default: k.RM_GOOD }  /* Can be any of dirty, disOrder, ok*/, 
+      bookedStatus : { type: String, default: k.RM_VACANT } /* booked, reserved, checkedIn, vacant,dueOut*/
   }
 },{timestamps: true});
 
+
 var blogBost = mongoose.model('Facility', facilitySchema);
+//var Friend = mongoose.Model('RoomType', roomType);
 module.exports = blogBost;

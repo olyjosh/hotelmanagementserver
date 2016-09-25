@@ -2,14 +2,23 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var bookingSchema = new Schema({
-  status: String,
+  status: String,// Can be reserved, booked,dueout,vacant,
   room : {type : mongoose.Schema.Types.ObjectId , ref : 'Facility'},
-  customer : {type : mongoose.Schema.Types.ObjectId , ref : 'User'},
   channel : String /* any of online, web, frontDesk*/,
   performedBy : {type : mongoose.Schema.Types.ObjectId , ref : 'User'},
+//  customer : {type : mongoose.Schema.Types.ObjectId , ref : 'User'}, // Useful for a sign up customers
+  guest : {
+      firstName : String,
+      lastName : String ,
+      phone : String,
+      
+  }, // Now I'm using phone number as unique id
+  checkIn : Date,
+  checkOut : Date,
   amount : Number,
   discount : Number,
-  tax : Number,
+  isCheckIn : { type: Boolean, default: false } ,
+  isCancel : { type: Boolean, default: false } ,
   payment : { 
       paid : Boolean, 
       amount : Number,
