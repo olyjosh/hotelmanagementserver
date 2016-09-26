@@ -168,32 +168,21 @@ app.get('/api/op/create/room', function (req, res, next) {
     });
 });
 
-app.get('/api/op/fetch/room', function(req, res, next){
-  var Colle = require('./model/facility');
-//  mongoose.Model('RoomType', roomType);
-//  mongoose.Model('Floor', floor);
-    Colle.find({}, function (err, data) {
-        if (err) {
-            return next(err);
-        }
-        return res.json({status:1, message : data});
-    });
-    
-    
-//    Colle.find().populate('roomType').exec( function (err, data) {
+//app.get('/api/op/fetch/room', function(req, res, next){
+//  var Colle = require('./model/facility');
+//
+//    Colle.find({}, function (err, data) {
 //        if (err) {
 //            return next(err);
 //        }
 //        return res.json({status:1, message : data});
 //    });
-    
-});
+//    
+//});
 
-app.get('/api/op/fetch/room2', function(req, res, next){
+app.get('/api/op/fetch/room', function(req, res, next){
   var Colle = require('./model/facility');
-    require('./model/roomType');
-    require('./model/floors');
-    Colle.find().populate('floor').exec( function (err, data) {
+    Colle.find().populate('floor','roomType').exec( function (err, data) {
         if (err) {
             return next(err);
         }
@@ -314,7 +303,7 @@ app.get('/api/op/fetch/roomtype', function(req, res, next){
 
 
 app.get('/api/op/edit/roomtype', function(req, res, next){
-  
+    
 });
 
 app.get('/api/op/delete/roomtype', function (req, res, next) {
@@ -347,8 +336,16 @@ app.get('/api/op/create/book', function(req, res, next){
     book.channel = q.channel; /* any of online, web, frontDesk*/
     book.performedBy = q.performedBy;
     book.amount = q.amount;
+    
     book.checkIn = q.checkIn;
     book.checkOut = q.checkOut;
+    var che = q.isCheckIn;
+
+    book.arrival=book.checkIn;
+    if (che==="true") {
+        book.isCheckIn = true;
+        
+    }
 //    book.guestId = q.phone;
     book.guest.firstName = q.firstName;
     book.guest.lastName = q.lastName;
@@ -428,7 +425,7 @@ var createGuest = function (q) {
 
 app.get('/api/op/fetch/book', function(req, res, next){
     var Collec = require('./model/booking');
-    Collec.find({}, function (err, data) {
+    Collec.find({}).populate('room').exec(function (err, data) {
         if (err) {
             return next(err);
         }
@@ -440,6 +437,29 @@ app.get('/api/op/fetch/book', function(req, res, next){
 
 app.get('/api/op/edit/book', function(req, res, next){
   
+});
+
+app.get('/api/op/create/checkin', function(req, res, next){
+  var q = req.query;
+  var Collec = require('./model/booking');
+  var book = new Collec();
+  book.isCheckIn = true;
+  book.arrival = q.arrival;
+  
+    Collec.findByIdAndUpdate(q.id, {$push: {isCheckIn: true, arrival: q.arrival}}, function (err, data) {
+        if (err) {
+//            return next(err);
+            console.log();
+        }
+        return res.json({status: 1, message: data});
+    });
+//  Collec.findOneAndUpdate({ _id: q.id }, book.toObject(), function (err, data) {
+//        if (err) {
+////            return next(err);
+//            console.log();
+//        }
+//        return res.json({status:1, message : data});
+//    });
 });
 
 app.get('/api/op/delete/book', function (req, res, next) {

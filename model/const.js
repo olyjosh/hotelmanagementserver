@@ -13,6 +13,12 @@ a.channel_ONLINE = "online";
 a.channel_Mobile = "mobile";
 a.channel_FRONT = "front";
 
+a.trans_TYPE_HOTEL = "hotel";
+a.trans_TYPE_LANNDRY = "laundry";
+a.trans_TYPE_HOTEL = "bar";
+a.trans_TYPE_BANQUET = "banquest";
+a.trans_TYPE_OTHERS = "other";
+
 
 module.exports = a;
 

@@ -1,5 +1,6 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+require('./facility');;
 
 var bookingSchema = new Schema({
   status: String,// Can be reserved, booked,dueout,vacant,
@@ -15,9 +16,10 @@ var bookingSchema = new Schema({
   }, // Now I'm using phone number as unique id
   checkIn : Date,
   checkOut : Date,
+  arrival : Date,
   amount : Number,
   discount : Number,
-  isCheckIn : { type: Boolean, default: false } ,
+  isCheckIn : Boolean,
   isCancel : { type: Boolean, default: false } ,
   payment : { 
       paid : Boolean, 
