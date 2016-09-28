@@ -74,6 +74,7 @@ var verifyAuth = function (req, res, next) {
                 , function (err, decoded) {
                     if (err) {
                         // Failed token
+                        res.status(401);
                         return res.json({status: 0, message: 'Invalid authentication, Please login'});
                     } else {
                         //Proceed with the operations
@@ -87,6 +88,11 @@ var verifyAuth = function (req, res, next) {
 }
 
 app.use(verifyAuth); 
+var k = require('./model/const');
+
+/**
+ *  Create user(staff registeration), login  authentication
+ * */
 
 app.post('/api/register', function(req, res, next){
   if(!req.body.username || !req.body.password){
@@ -143,8 +149,8 @@ app.post('/api/login', function(req, res, next){
   })(req, res, next);
 });
 
-/*
- * All other operation here the involve using token authentication to access
+/************************************************************
+ * Room , room type and floor
  */
 
 app.get('/api/op/create/room', function (req, res, next) {
@@ -191,13 +197,65 @@ app.get('/api/op/fetch/room', function(req, res, next){
     
 });
 
+app.get('/api/op/fetch/vacantroom', function(req, res, next){
+  var q= req.query;
+//  var d1 = q.d1;
+//  var d2 =q.d2
+ // "roomStatus.bookedStatus":k.RM_VACANT , 
+  var Colle = require('./model/facility');
+    Colle.find(
+            {$and:[{"roomStatus.bookedStatus":k.RM_VACANT},{"roomStatus.state":{ $ne: k.RM_DISORDER }}]}).populate('floor','roomType').exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
+
+app.get('/api/op/fetch/outoforder', function(req, res, next){
+  var q= req.query;
+//  var d1 = q.d1;
+//  var d2 =q.d2
+ // "roomStatus.bookedStatus":k.RM_VACANT , 
+  var Colle = require('./model/facility');
+    Colle.find({"roomStatus.state" : k.RM_DISORDER}).exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
+
+app.get('/api/op/edit/outoforder', function(req, res, next){
+  var q= req.query;
+  changeRoomState(q.id, q.status, function(data){
+        return res.json({status:1, message : data});
+    });
+});
+
+
+
+app.get('/api/op/fetch/roomstay', function(req, res, next){
+  var q= req.query;
+    var Colle = require('./model/booking');
+    Colle.find(
+            {$and:[{checkIn :{$gte:q.d1}},{checkOut:{ $lte: q.d2 }}]}).populate('floor','roomType').exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+    
+});
+
+
 
 app.get('/api/op/edit/room', function(req, res, next){
-  
+    
 });
 
 app.get('/api/op/delete/room', function(req, res, next){
-  var id = req.query.id;
+    var id = req.query.id;
     var Post = require('./model/facility');
 
     Post.find({id: id}).remove(function (err) {
@@ -209,6 +267,8 @@ app.get('/api/op/delete/room', function(req, res, next){
     })
 });
 
+
+//floors
 app.get('/api/op/create/floor', function (req, res, next) {
 
     var Floor = require('./model/floors');
@@ -257,7 +317,9 @@ app.get('/api/op/delete/floor', function (req, res, next) {
     })
 });
 
-// roomType stuffs
+/* 
+ * roomType stuffs 
+ * */
 app.get('/api/op/create/roomtype', function(req, res, next){
    
     var RoomType = require('./model/roomType');
@@ -295,12 +357,8 @@ app.get('/api/op/fetch/roomtype', function(req, res, next){
             return next(err);
         }
         return res.json({status:1, message : data});
-//        respon = {status: 1, posts: posts};
-//        res.send(JSON.stringify(respon));
     });
 });
-
-
 
 app.get('/api/op/edit/roomtype', function(req, res, next){
     
@@ -319,15 +377,15 @@ app.get('/api/op/delete/roomtype', function (req, res, next) {
 });
 
 
-// Booking
-
-
+/************************************************************
+ * Booking reservation and checkin
+ */
 app.get('/api/op/create/book', function(req, res, next){
    
     var Book = require('./model/booking');
     var book = new Book();
     var q = req.query;
-    book.status = q.status
+    book.status = q.status;
     book.room = q.room;
 //    var customer = q.customer;
 //    if (customer != null) {
@@ -352,8 +410,9 @@ app.get('/api/op/create/book', function(req, res, next){
     book.guest.phone = q.phone;
     
 
-    var s = createGuest (q);
-    console.log(s);
+    createGuest (q);
+    changeRoomBookStatus(q.room, q.status,function(data){});
+    
     book.save(function (err, data) {
         if (err) { 
         return next(err); 
@@ -361,6 +420,38 @@ app.get('/api/op/create/book', function(req, res, next){
     return res.json({status:1, message : data});
   });
 });
+
+changeRoomState= function(id,status,callback){
+    var Fac = require('./model/facility');
+    var fac = new Fac();
+    fac.roomStatus.state  = status;
+    Fac.findByIdAndUpdate(id, {"roomStatus.state": status}, function (err, data) {
+        if (err) {
+//            return next(err);
+            console.log();
+        }
+        return callback(data);
+    });
+}
+
+changeRoomBookStatus= function(id,status,callback){
+    var Fac = require('./model/facility');
+    var fac = new Fac();
+    fac.roomStatus.bookedStatus = status;
+//    Lists.findByIdAndUpdate(listId, {$push: , function(err, list) {
+//    ...
+//    });
+    // This update will return updated data
+    Fac.findByIdAndUpdate(id, {"roomStatus.bookedStatus": status}, function (err, data) {
+        if (err) {
+            return next(err);
+            //console.log();
+        }
+        
+        return callback(data);
+    });
+}
+
 
 var createGuest = function (q) {
         
@@ -383,45 +474,11 @@ var createGuest = function (q) {
 //            return next(err);
             console.log();
         }
+        console.log(data);
         return data;
     });
 //    return ret;
 }
-
-
-//app.get('/api/op/create/book', function(req, res, next){
-//   
-//    var Book = require('./model/booking');
-//    var book = new Book();
-//    var q = req.query;
-//    book.status = q.status
-//    book.isCancel = q.iscancel;
-//    book.room = q.room;
-//    var customer = q.customer;
-//    if (customer != null) {
-//        book.customer = customer;
-//    }
-//    book.channel = q.channel; /* any of online, web, frontDesk*/
-//    book.performedBy = q.performedBy;
-//    book.amount = q.amount;
-//    book.discount = q.discount;
-//    book.isCheckIn = q.isCheckIn;
-//
-//    book.payment.paid = q.payment_paid;
-//    book.payment.amount = q.payment_amount;
-//    book.payment.type = q.payment_type;/*Cash, online, Mobile, Pos*/
-//    book.payment.tax = q.payment_tax;
-//    book.payment.refId = q.payment_refId;
-//    book.payment.time = q.payment_time;
-//    
-//    
-//    book.save(function (err, data) {
-//        if (err) { 
-//        return next(err); 
-//    }
-//    return res.json({status:1, message : data});
-//  });
-//});
 
 app.get('/api/op/fetch/book', function(req, res, next){
     var Collec = require('./model/booking');
@@ -448,25 +505,18 @@ app.get('/api/op/create/checkin', function(req, res, next){
   
     Collec.findByIdAndUpdate(q.id, {$push: {isCheckIn: true, arrival: q.arrival}}, function (err, data) {
         if (err) {
-//            return next(err);
-            console.log();
+            return next(err);
         }
         return res.json({status: 1, message: data});
     });
-//  Collec.findOneAndUpdate({ _id: q.id }, book.toObject(), function (err, data) {
-//        if (err) {
-////            return next(err);
-//            console.log();
-//        }
-//        return res.json({status:1, message : data});
-//    });
+
 });
 
 app.get('/api/op/delete/book', function (req, res, next) {
     var id = req.query.id;
     var Collec = require('./model/booking');
 
-    Collec.find({id: id}).remove(function (err) {
+    Collec.find({_id: id}).remove(function (err) {
         if (err)
             throw err
         respon = {status: 1};
@@ -479,7 +529,10 @@ app.get('/api/op/cancel/book', function(req, res, next){
 });
 
 
-//Guest list and Guest Messages
+/************************************************************
+ * Guest list and Guest Messages
+ * 
+ */
 app.get('/api/op/fetch/guests', function(req, res, next){
     var Collec = require('./model/guest');
     //isCheckIn : false,
@@ -540,159 +593,464 @@ app.get('/api/op/create/message', function(req, res, next){
   });
 });
 
-app.get('/api/post', function (req, res) {
-    var respon = {status: 0};
-    var user = req.query.user;
-    var postVar = require('./model/post');
-    postVar.find({username : user}, function (err, posts) {
-        if (err){
-            throw err;
-    }
-        respon = {status: 1, posts: posts};
-        res.send(JSON.stringify(respon));
-    });
+/************************************************************
+ * Laundry
+ */
 
-});
-
-
-
-app.get('/api/postAll', function (req, res) {
-    var respon = {status: 0};
-    var user = req.query.user;
-    var postVar = require('./model/post');
-    postVar.find({}, function (err, posts) {
-        if (err){
-            throw err;
-    }
-        respon = {status: 1, posts: posts};
-        res.send(JSON.stringify(respon));
-    });
-
-});
-
-app.post('/api/post', function (req, res) {
-    var respon={status:0};
-    //var email = "olyjoshone@gmail.com";
-
-    var Post = require('./model/post');
-    console.log("\n\n\n The images here");
-    console.log(req.body.image);
-    var postVar = new Post({
-        email: "olyjoshone@gmail.com",
-        product: req.body.product,
-        type: req.body.type,
-        location: req.body.location,
-        description: req.body.description,
-        price: req.body.price,
-        images: req.body.images,
-        negotiable: req.body.negotiable
-
-    });
-    
-// call the built-in save method to save to the database
-    postVar.save(function (err,post) {
-        if (err){
-            //throw err;
+app.get('/api/op/create/laundryitem', function (req, res, next) {
+    var Coll = require('./model/laundryItem');
+    var c = new Coll();
+    var q = req.query;
+    c.alias=q.alis;
+    c.name=q.name;
+    c.code=q.code;
+    c.category=q.category;
+    c.visibility=q.visibility;
+    c.itemImage=q.itemImage;
+    c.desc=q.desc;
+    c.performedBy = q.performedBy;
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
         }
-        console.log('Post saved successfully!');
-        respon={status:1, post_id:post._id};
-        res.send(JSON.stringify(respon));
+        return res.json({status: 1, message: data})
     });
 });
 
-
-
-//The blog posting code starts here
-app.post('/api/createBlogPost', function (req, res) {
-    var respon={status:0};
-    
-    var title = req.body.title;
-    var pos = req.body.post;
-    var Post = require('./model/blogPost');
-    var postVar = new Post({
-        title: title,
-        post: pos,
-        author: "Olyjosh"// new to change this to the name of the user in session when I have been able to work with session
-    });
-    
-    postVar.save(function (err,post) {
-        if (err){
-            //throw err;
+app.get('/api/op/fetch/laundryitem', function(req, res, next){
+  var Colle = require('./model/laundryItem');
+    Colle.find().exec( function (err, data) {
+        if (err) {
+            return next(err);
         }
-        
-        respon={status:1, post:post};
-        console.log(post);
-        res.send(JSON.stringify(respon));
+        return res.json({status:1, message : data});
     });
 });
 
-// read blog post here soon
 
-
-app.post('/api/deleteBlogPost', function (req, res) {
-
-    var respon={status:0};
-    var postid = req.body.id;
-    var Post = require('./model/blogPost');
-    
-    Post.find({ id:postid }).remove( function(err){
+app.get('/api/op/delete/laundryitem', function(req, res, next){
+    var Collec = require('./model/laundryItem');
+    Collec.find({_id: req.query.id}).remove(function (err) {
         if (err)
-                throw err
-        console.log('DELETED');
-        respon={status:1};
+            throw err
+        respon = {status: 1};
         res.send(JSON.stringify(respon));
-    });
+    })
     
 });
 
-app.post('/api/editBlogPost', function (req, res) {
-    var respon = {status: 0};
-    var Post = require('./model/blogPost');
-// call the built-in save method to save to the database
-    console.log(req.body)
-    var Post = require('./model/blogPost');
-    var postVar = new Post({
-        title: req.body.title,
-        status: req.body.post
+app.get('/api/op/edit/laundryitem', function(req, res, next){
+    var Collec = require('./model/laundryItem');
+    var c = new Coll();
+    var q = req.query;
+    c.alias=q.alis;
+    c.name=q.name;
+    c.code=q.code;
+    c.category=q.category;
+    c.visibility=q.visibility;
+    c.itemImage=q.itemImage;
+    c.desc=q.desc;
+    c.performedBy = q.performedBy;
+    
+    Collec.findOneAndUpdate({ _id: q.id }, c.toObject(), function (err, data) {
+        if (err) {
+//            return next(err);
+            console.log();
+        }
+        console.log(data);
+        return data;
     });
+});
 
-    var upsertData = postVar.toObject();
 
-// Delete the _id property, otherwise Mongo will return a "Mod on _id not allowed" error
-    delete upsertData._id;
 
-    Post.update({_id: postVar.id}, upsertData, {upsert: true}, function(err){
+app.get('/api/op/create/service', function (req, res, next) {
+    var q = req.query;    
+    var Coll = require('./model/service');
+    var c = new Coll();
+    
+    c.alias=q.alis;
+    c.name=q.name;
+    c.extraCharge=q.extraCharge;
+    c.desc=q.desc;
+    c.image=q.image;
+    c.service =  q.service;
+    c.performedBy = q.performedBy;
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
+    });
+});
+
+app.get('/api/op/fetch/service', function(req, res, next){
+    var q = req.query; 
+    
+    var query = {};
+    if(q.service!==null)query={service:q.service};
+  var Colle = require('./model/service');
+    Colle.find(query).exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
+
+
+app.get('/api/op/delete/service', function(req, res, next){
+    var Collec = require('./model/service');
+    Collec.find({_id: req.query.id}).remove(function (err) {
         if (err)
-                throw err
-            //return res.send(500, {error: err});
-        respon = {status: 1, posts: doc};
+            throw err
+        respon = {status: 1};
         res.send(JSON.stringify(respon));
-    });
-
-
+    })
+    
 });
 
-app.get('/api/readBlogPost', function (req, res) {
-    var respon = {status: 0};
-    var postVar = require('./model/blogPost');
-    postVar.find({}, function (err, posts) {
-        if (err){
-            throw err;
-    }
-        respon = {status: 1, posts: posts};
-        res.send(JSON.stringify(respon));
+app.get('/api/op/edit/service', function(req, res, next){
+    var Collec = require('./model/service');
+    var c = new Coll();
+    var q = req.query;
+    c.alias=q.alis;
+    c.name=q.name;
+    c.extraCharge=q.extraCharge;
+    c.desc=q.desc;
+    c.image=q.image;
+    c.service =  q.service;
+    c.performedBy = q.performedBy;
+    
+    Collec.findOneAndUpdate({ _id: q.id }, c.toObject(),  function (err, data) {
+        if (err) {
+//            return next(err);
+            console.log();
+        }
+        console.log(data);
+        return data;
     });
+});
 
+app.get('/api/op/create/returnin', function (req, res, next) {
+    var Coll = require('./model/returnIn');
+    var c = new Coll();
+    var q = req.query;
+   
+    c.alias=q.alis;
+    c.name=q.name;
+    c.extraCharge=q.extraCharge;
+    c.desc=q.desc;
+    c.image=q.image;
+    c.performedBy = q.performedBy;
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
+    });
+});
+
+app.get('/api/op/fetch/returnin', function(req, res, next){
+  var Colle = require('./model/returnIn');
+    Colle.find().exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
 });
 
 
+app.get('/api/op/delete/returnin', function(req, res, next){
+    var Collec = require('./model/returnIn');
+    Collec.find({_id: req.query.id}).remove(function (err) {
+        if (err)
+            throw err
+        respon = {status: 1};
+        res.send(JSON.stringify(respon));
+    })
+    
+});
+
+app.get('/api/op/edit/returnin', function(req, res, next){
+    var Collec = require('./model/returnIn');
+    var c = new Coll();
+    var q = req.query;
+    c.alias=q.alis;
+    c.name=q.name;
+    c.extraCharge=q.extraCharge;
+    c.desc=q.desc;
+    c.image=q.image;
+    c.performedBy = q.performedBy;
+    
+    Collec.findOneAndUpdate({ _id: q.id }, c.toObject(),  function (err, data) {
+        if (err) {
+//            return next(err);
+            console.log();
+        }
+        console.log(data);
+        return data;
+    });
+});
+
+
+
+
+app.get('/api/op/create/dailylaundry', function (req, res, next) {
+    var Coll = require('./model/dailyLaundry');
+    var c = new Coll();
+    var q = req.query;
+    
+    c.sn=q.sn;
+    c.date=q.date;
+    c.item=q.item;
+    c.user=q.user;
+    c.status=q.image;
+    c.laundryService=q.laundryService;
+    c.hotelService=q.hotelService;
+    c.returnIn=q.returnIn;
+    c.returned=q.returned;
+    c.bill=q.bill;
+    c.amonunt=q.amonunt;
+    c.balance=q.balance;
+    c.remark=q.remark;
+    c.performedBy = q.performedBy;
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
+    });
+});
+
+app.get('/api/op/fetch/dailylaundry', function(req, res, next){
+  var Colle = require('./model/dailyLaundry');
+    Colle.find().exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
+
+
+app.get('/api/op/delete/dailylaundry', function(req, res, next){
+    var Collec = require('./model/dailyLaundry');
+    Collec.find({_id: req.query.id}).remove(function (err) {
+        if (err)
+            throw err
+        respon = {status: 1};
+        res.send(JSON.stringify(respon));
+    })
+    
+});
+
+app.get('/api/op/edit/dailylaundry', function(req, res, next){
+    var Collec = require('./model/dailyLaundry');
+    var c = new Coll();
+    var q = req.query;
+    c.sn=q.sn;
+    c.date=q.date;
+    c.item=q.item;
+    c.user=q.user;
+    c.status=q.image;
+    c.laundryService=q.laundryService;
+    c.hotelService=q.hotelService;
+    c.returnIn=q.returnIn;
+    c.returned=q.returned;
+    c.bill=q.bill;
+    c.amonunt=q.amonunt;
+    c.balance=q.balance;
+    c.remark=q.remark;
+    c.performedBy = q.performedBy;
+    
+    Collec.findOneAndUpdate({ _id: q.id }, c.toObject(), function (err, data) {
+        if (err) {
+//            return next(err);
+            console.log();
+        }
+        console.log(data);
+        return data;
+    });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//app.get('/api/post', function (req, res) {
+//    var respon = {status: 0};
+//    var user = req.query.user;
+//    var postVar = require('./model/post');
+//    postVar.find({username : user}, function (err, posts) {
+//        if (err){
+//            throw err;
+//    }
+//        respon = {status: 1, posts: posts};
+//        res.send(JSON.stringify(respon));
+//    });
+//
+//});
+//
+//
+//
+//app.get('/api/postAll', function (req, res) {
+//    var respon = {status: 0};
+//    var user = req.query.user;
+//    var postVar = require('./model/post');
+//    postVar.find({}, function (err, posts) {
+//        if (err){
+//            throw err;
+//    }
+//        respon = {status: 1, posts: posts};
+//        res.send(JSON.stringify(respon));
+//    });
+//
+//});
+//
+//app.post('/api/post', function (req, res) {
+//    var respon={status:0};
+//    //var email = "olyjoshone@gmail.com";
+//
+//    var Post = require('./model/post');
+//    console.log("\n\n\n The images here");
+//    console.log(req.body.image);
+//    var postVar = new Post({
+//        email: "olyjoshone@gmail.com",
+//        product: req.body.product,
+//        type: req.body.type,
+//        location: req.body.location,
+//        description: req.body.description,
+//        price: req.body.price,
+//        images: req.body.images,
+//        negotiable: req.body.negotiable
+//
+//    });
+//    
+//    
+//    
+//// call the built-in save method to save to the database
+//    postVar.save(function (err,post) {
+//        if (err){
+//            //throw err;
+//        }
+//        console.log('Post saved successfully!');
+//        respon={status:1, post_id:post._id};
+//        res.send(JSON.stringify(respon));
+//    });
+//});
+//
+//
+//
+////The blog posting code starts here
+//app.post('/api/createBlogPost', function (req, res) {
+//    var respon={status:0};
+//    
+//    var title = req.body.title;
+//    var pos = req.body.post;
+//    var Post = require('./model/blogPost');
+//    var postVar = new Post({
+//        title: title,
+//        post: pos,
+//        author: "Olyjosh"// new to change this to the name of the user in session when I have been able to work with session
+//    });
+//    
+//    postVar.save(function (err,post) {
+//        if (err){
+//            //throw err;
+//        }
+//        
+//        respon={status:1, post:post};
+//        console.log(post);
+//        res.send(JSON.stringify(respon));
+//    });
+//});
+//
+//// read blog post here soon
+//
+//
+//app.post('/api/deleteBlogPost', function (req, res) {
+//
+//    var respon={status:0};
+//    var postid = req.body.id;
+//    var Post = require('./model/blogPost');
+//    
+//    Post.find({ id:postid }).remove( function(err){
+//        if (err)
+//                throw err
+//        console.log('DELETED');
+//        respon={status:1};
+//        res.send(JSON.stringify(respon));
+//    });
+//    
+//});
+//
+//app.post('/api/editBlogPost', function (req, res) {
+//    var respon = {status: 0};
+//    var Post = require('./model/blogPost');
+//// call the built-in save method to save to the database
+//    console.log(req.body)
+//    var Post = require('./model/blogPost');
+//    var postVar = new Post({
+//        title: req.body.title,
+//        status: req.body.post
+//    });
+//
+//    var upsertData = postVar.toObject();
+//
+//// Delete the _id property, otherwise Mongo will return a "Mod on _id not allowed" error
+//    delete upsertData._id;
+//
+//    Post.update({_id: postVar.id}, upsertData, {upsert: true}, function(err){
+//        if (err)
+//                throw err
+//            //return res.send(500, {error: err});
+//        respon = {status: 1, posts: doc};
+//        res.send(JSON.stringify(respon));
+//    });
+//
+//
+//});
+//
+//app.get('/api/readBlogPost', function (req, res) {
+//    var respon = {status: 0};
+//    var postVar = require('./model/blogPost');
+//    postVar.find({}, function (err, posts) {
+//        if (err){
+//            throw err;
+//    }
+//        respon = {status: 1, posts: posts};
+//        res.send(JSON.stringify(respon));
+//    });
+//
+//});
+//
+//
 
 
 //The blog post code stop here
 
 
 //SErve images
-app.get('/api/static/image', function (req, res) {
+app.get('/api/op/static/image', function (req, res) {
     var respon = {status: 0};
     
     console.log(req.query);
