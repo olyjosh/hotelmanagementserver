@@ -22,5 +22,16 @@ a.trans_TYPE_OTHERS = "other";
 a.lan_SERVICE_HOTEL = "hotel";
 a.lan_SERVICE_LAUNDRY = "laundry";
 
+a.USER_SUPER_ADMIN = 0;
+a.USER_ADMIN = 1;
+a.USER_ADMIN_2= 2
+a.USER_FRONT = 3;
+a.USER_HOUSEKEEP = 4;
+a.USER_LAUNDRY = 5;
+a.USER_KITCHEN = 6;
+a.USER_MINIBAR = 7;
+a.USER_MAINTENANCE = 8;
+
+
 module.exports = a;
 

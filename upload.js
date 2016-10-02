@@ -21,8 +21,7 @@ exports.postImage = function (req, res) {
         var extension = (extIndex < 0) ? '' : tmpPath.substr(extIndex);
         // uuid is for generating unique filenames.
         var fileName = uuid.v4() + extension;
-        //var destPath = appRoot + '/../public/images/profile_images/' + fileName;
-        var destPath = appRoot + '/res/images/profile_images/';
+        var destPath = appRoot + '/res/images/upload/';
 
         // Server side file type checker.
         if (contentType !== 'image/png' && contentType !== 'image/jpeg') {
@@ -44,8 +43,8 @@ exports.postImage = function (req, res) {
                 }
             });
             
-            return res.json(JSON.stringify({status:1, fileId:fileName}));
+            return res.json({status:1, fileId:fileName});
         } else
-            return res.json(JSON.stringify({status:0}));
+            return res.json({status:0});
     });
 };

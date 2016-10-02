@@ -18,6 +18,11 @@ var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var jwt = require('jsonwebtoken');
 
+var upload = require('./upload');
+var imgDir = global.appRoot+'/res/images/upload/';
+var k = require('./model/const');  // some useful constants
+
+
 var m = config.mongo;
 
 mongoose.connect(m.uri, {
@@ -60,10 +65,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 path = require('path');
 global.appRoot = path.resolve(__dirname);
-var imgDir = global.appRoot+'/res/images/profile_images/';
+
 
 app.use('/', routes); 
 app.use('/doc',doc);
+
 
 
 var verifyAuth = function (req, res, next) {
@@ -87,12 +93,12 @@ var verifyAuth = function (req, res, next) {
     }
 }
 
-app.use(verifyAuth); 
-var k = require('./model/const');
+app.use(verifyAuth); // Using the inteception created above
+
 
 /**
  *  Create user(staff registeration), login  authentication
- * */
+ **/
 
 app.post('/api/register', function(req, res, next){
   if(!req.body.username || !req.body.password){
@@ -877,176 +883,12 @@ app.get('/api/op/edit/dailylaundry', function(req, res, next){
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//app.get('/api/post', function (req, res) {
-//    var respon = {status: 0};
-//    var user = req.query.user;
-//    var postVar = require('./model/post');
-//    postVar.find({username : user}, function (err, posts) {
-//        if (err){
-//            throw err;
-//    }
-//        respon = {status: 1, posts: posts};
-//        res.send(JSON.stringify(respon));
-//    });
-//
-//});
-//
-//
-//
-//app.get('/api/postAll', function (req, res) {
-//    var respon = {status: 0};
-//    var user = req.query.user;
-//    var postVar = require('./model/post');
-//    postVar.find({}, function (err, posts) {
-//        if (err){
-//            throw err;
-//    }
-//        respon = {status: 1, posts: posts};
-//        res.send(JSON.stringify(respon));
-//    });
-//
-//});
-//
-//app.post('/api/post', function (req, res) {
-//    var respon={status:0};
-//    //var email = "olyjoshone@gmail.com";
-//
-//    var Post = require('./model/post');
-//    console.log("\n\n\n The images here");
-//    console.log(req.body.image);
-//    var postVar = new Post({
-//        email: "olyjoshone@gmail.com",
-//        product: req.body.product,
-//        type: req.body.type,
-//        location: req.body.location,
-//        description: req.body.description,
-//        price: req.body.price,
-//        images: req.body.images,
-//        negotiable: req.body.negotiable
-//
-//    });
-//    
-//    
-//    
-//// call the built-in save method to save to the database
-//    postVar.save(function (err,post) {
-//        if (err){
-//            //throw err;
-//        }
-//        console.log('Post saved successfully!');
-//        respon={status:1, post_id:post._id};
-//        res.send(JSON.stringify(respon));
-//    });
-//});
-//
-//
-//
-////The blog posting code starts here
-//app.post('/api/createBlogPost', function (req, res) {
-//    var respon={status:0};
-//    
-//    var title = req.body.title;
-//    var pos = req.body.post;
-//    var Post = require('./model/blogPost');
-//    var postVar = new Post({
-//        title: title,
-//        post: pos,
-//        author: "Olyjosh"// new to change this to the name of the user in session when I have been able to work with session
-//    });
-//    
-//    postVar.save(function (err,post) {
-//        if (err){
-//            //throw err;
-//        }
-//        
-//        respon={status:1, post:post};
-//        console.log(post);
-//        res.send(JSON.stringify(respon));
-//    });
-//});
-//
-//// read blog post here soon
-//
-//
-//app.post('/api/deleteBlogPost', function (req, res) {
-//
-//    var respon={status:0};
-//    var postid = req.body.id;
-//    var Post = require('./model/blogPost');
-//    
-//    Post.find({ id:postid }).remove( function(err){
-//        if (err)
-//                throw err
-//        console.log('DELETED');
-//        respon={status:1};
-//        res.send(JSON.stringify(respon));
-//    });
-//    
-//});
-//
-//app.post('/api/editBlogPost', function (req, res) {
-//    var respon = {status: 0};
-//    var Post = require('./model/blogPost');
-//// call the built-in save method to save to the database
-//    console.log(req.body)
-//    var Post = require('./model/blogPost');
-//    var postVar = new Post({
-//        title: req.body.title,
-//        status: req.body.post
-//    });
-//
-//    var upsertData = postVar.toObject();
-//
-//// Delete the _id property, otherwise Mongo will return a "Mod on _id not allowed" error
-//    delete upsertData._id;
-//
-//    Post.update({_id: postVar.id}, upsertData, {upsert: true}, function(err){
-//        if (err)
-//                throw err
-//            //return res.send(500, {error: err});
-//        respon = {status: 1, posts: doc};
-//        res.send(JSON.stringify(respon));
-//    });
-//
-//
-//});
-//
-//app.get('/api/readBlogPost', function (req, res) {
-//    var respon = {status: 0};
-//    var postVar = require('./model/blogPost');
-//    postVar.find({}, function (err, posts) {
-//        if (err){
-//            throw err;
-//    }
-//        respon = {status: 1, posts: posts};
-//        res.send(JSON.stringify(respon));
-//    });
-//
-//});
-//
-//
-
-
-//The blog post code stop here
+/**
+ *  Uploading contenet to the server
+ */
+//app.route('/api/op/static/upload')
+app.route('/api/op/static/upload')
+    .post(upload.postImage);
 
 
 //SErve images
@@ -1075,11 +917,6 @@ app.get('api/user/:uid/photos/:file', function (req, res) {
 //    });
 });
 
-
-
-var upload = require('./upload')
-app.route('/upload/image')
-    .post(upload.postImage);
 
 
 app.get('/api/login', function (req, res) {
