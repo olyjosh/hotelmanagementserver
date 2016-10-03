@@ -194,11 +194,11 @@ app.get('/api/op/create/room', function (req, res, next) {
 
 app.get('/api/op/fetch/room', function(req, res, next){
   var Colle = require('./model/facility');
-    Colle.find().populate('floor','roomType').exec( function (err, data) {
+    Colle.find({}).populate('floor').populate('roomType').exec( function (err, data) {
         if (err) {
             return next(err);
         }
-        return res.json({status:1, message : data});
+        return res.json({status:1, mxessage : data});
     });
     
 });
