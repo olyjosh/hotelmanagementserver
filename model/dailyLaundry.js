@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var deptSchema = new Schema({
+var sch = new Schema({
     sn : Number,
     date : Date,
     item : String,
@@ -18,5 +18,5 @@ var deptSchema = new Schema({
     performedBy : {type : mongoose.Schema.Types.ObjectId , ref : 'User'}
 },{timestamps: true});
 
-var blogBost = mongoose.model('DailyLaundry', deptSchema);
+var blogBost = mongoose.model('DailyLaundry', sch);
 module.exports = blogBost;

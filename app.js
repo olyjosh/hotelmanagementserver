@@ -198,7 +198,7 @@ app.get('/api/op/fetch/room', function(req, res, next){
         if (err) {
             return next(err);
         }
-        return res.json({status:1, mxessage : data});
+        return res.json({status:1, message : data});
     });
     
 });
@@ -882,10 +882,440 @@ app.get('/api/op/edit/dailylaundry', function(req, res, next){
 });
 
 
+/**************************************************************************
+ * 
+ * Tool and Utility
+ **************************************************************************/
 
-/**
- *  Uploading contenet to the server
- */
+// lost and found, careless owner
+app.get('/api/op/create/lostfound', function (req, res, next) {
+    var Coll = require('./model/lostFound');
+    var c = new Coll();
+    var q = req.query;
+
+    c.onDate=q.on;
+    c.name=q.name;
+    c.color=q.color;
+    c.location=q.location;
+    c.roomNo=q.roomNo;
+    c.current=q.current;
+    c.founder=q.founder;
+    c.comp.name=q.comp_name;
+    c.comp.address=q.comp_address;
+    c.comp.city=q.comp_city;
+    c.comp.state=q.comp_state;
+    c.comp.zip=q.comp_zip;
+    c.comp.country=q.comp_country;
+    c.comp.phone = q.comp_phone;
+    c.reso.returnBy =q.reso_returnBy;
+    c.reso.discardBy=q.reso_discardBy;
+    c.reso.returnDate = q.reso_returnDate;
+    c.reso.discardDate = q.reso_discardDate;
+    c.remark = q.remark;
+    c.performedBy = q.performedBy;
+    
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
+    });
+});
+
+app.get('/api/op/fetch/lostfound', function(req, res, next){
+  var Colle = require('./model/lostFound');
+    Colle.find().exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
+
+
+app.get('/api/op/delete/lostfound', function(req, res, next){
+    var Collec = require('./model/lostFound');
+    Collec.find({_id: req.query.id}).remove(function (err) {
+        if (err)
+            throw err
+        respon = {status: 1};
+        res.send(JSON.stringify(respon));
+    })
+    
+});
+
+app.get('/api/op/edit/lostfound', function(req, res, next){
+    var Collec = require('./model/lostFound');
+    var c = new Coll();
+    var q = req.query;
+        
+    c.on=q.on;
+    c.name=q.name;
+    c.color=q.color;
+    c.location=q.location;
+    c.roomNo=q.roomNo;
+    c.current=q.current;
+    c.founder=q.founder;
+    c.comp.name=q.comp_name;
+    c.comp.address=q.comp_address;
+    c.comp.city=q.comp_city;
+    c.comp.state=q.comp_state;
+    c.comp.zip=q.comp_zip;
+    c.comp.country=q.comp_country;
+    c.comp.phone = q.comp_phone;
+    c.reso.returnBy =q.reso_returnBy;
+    c.reso.discardBy=q.reso_discardBy;
+    c.reso.returnDate = q.reso_returnDate;
+    c.reso.discardDate = q.reso_discardDate;
+    c.remark = q.remark;
+    c.performedBy = q.performedBy;
+    
+    Collec.findOneAndUpdate({ _id: q.id }, c.toObject(), function (err, data) {
+        if (err) {
+//            return next(err);
+            console.log();
+        }
+        console.log(data);
+        return data;
+    });
+});
+
+// reminders
+app.get('/api/op/create/reminder', function (req, res, next) {
+    var Coll = require('./model/reminder');
+    var c = new Coll();
+    var q = req.query;
+
+
+    c.name=q.name;
+    c.startTime=q.startTime;
+    c.priority=q.priority;
+    c.message=q.message;
+    c.interval=q.interval;
+    c.remark=q.remark;
+    c.stopAfter=q.stopAfter;
+    var reci = q.receivers.split(',');
+    c.receivers=reci;
+
+    c.performedBy = q.performedBy;
+    
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
+    });
+});
+
+app.get('/api/op/fetch/reminder', function(req, res, next){
+  var Colle = require('./model/reminder');
+    Colle.find().exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
+
+
+app.get('/api/op/delete/reminder', function(req, res, next){
+    var Collec = require('./model/reminder');
+    Collec.find({_id: req.query.id}).remove(function (err) {
+        if (err)
+            throw err
+        respon = {status: 1};
+        res.send(JSON.stringify(respon));
+    })
+    
+});
+
+app.get('/api/op/edit/reminder', function(req, res, next){
+    var Collec = require('./model/reminder');
+    var c = new Coll();
+    var q = req.query;
+        
+    c.name=q.name;
+    c.startTime=q.startTime;
+    c.priority=q.priority;
+    c.message=q.message;
+    c.interval=q.interval;
+    c.remark=q.remark;
+    c.stopAfter=q.stopAfter;
+    var reci = q.receivers.split(',');
+    c.receivers=reci;
+    
+    Collec.findOneAndUpdate({ _id: q.id }, c.toObject(), function (err, data) {
+        if (err) {
+//            return next(err);
+            console.log();
+        }
+        console.log(data);
+        return data;
+    });
+});
+
+// account
+app.get('/api/op/create/account', function (req, res, next) {
+    var Coll = require('./model/account');
+    var c = new Coll();
+    var q = req.query;
+
+    c.alis=q.alis;
+    c.accountName=q.accountName;
+    c.accountType=q.accountType;
+    c.firstName=q.firstName;
+    c.lastName=q.lastName;
+    c.address.one=q.address_one;
+    c.address.two=q.address_two;
+    c.city=q.city;
+    c.zip=q.zip;
+    c.state=q.state;
+    c.country=q.country;
+    c.email=q.email;
+    c.website=q.website;
+    c.rep = q.rep;
+    c.cred.accountNo=q.cred_accountNo;
+    c.cred.creditLimit=q.cred_creditLimit;
+    c.cred.openBalance=q.cred_openBalance;
+    c.cred.paymentTerm=q.cred_paymentTerm;
+    c.performedBy = q.performedBy;
+    
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
+    });
+});
+
+app.get('/api/op/fetch/account', function(req, res, next){
+  var Colle = require('./model/account');
+    Colle.find().exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
+
+
+app.get('/api/op/delete/account', function(req, res, next){
+    var Collec = require('./model/account');
+    Collec.find({_id: req.query.id}).remove(function (err) {
+        if (err)
+            throw err
+        respon = {status: 1};
+        res.send(JSON.stringify(respon));
+    })
+    
+});
+
+app.get('/api/op/edit/account', function(req, res, next){
+    var Collec = require('./model/account');
+    var c = new Coll();
+    var q = req.query;
+        
+    c.alis=q.alis;
+    c.accountName=q.accountName;
+    c.accountType=q.accountType;
+    c.firstName=q.firstName;
+    c.lastName=q.lastName;
+    c.address.one=q.address_one;
+    c.address.two=q.address_two;
+    c.city=q.city;
+    c.zip=q.zip;
+    c.state=q.state;
+    c.country=q.country;
+    c.email=q.email;
+    c.website=q.website;
+    c.rep = q.rep;
+    c.cred.accountNo=q.cred_accountNo;
+    c.cred.creditLimit=q.cred_creditLimit;
+    c.cred.openBalance=q.cred_openBalance;
+    c.cred.paymentTerm=q.cred_paymentTerm;
+    c.performedBy = q.performedBy;
+    
+    var reci = q.receivers.split(',');
+    c.receivers=reci;
+    
+    Collec.findOneAndUpdate({ _id: q.id }, c.toObject(), function (err, data) {
+        if (err) {
+//            return next(err);
+            console.log();
+        }
+        console.log(data);
+        return data;
+    });
+});
+
+// Phone
+app.get('/api/op/create/phone', function (req, res, next) {
+    var Coll = require('./model/phone');
+    var c = new Coll();
+    var q = req.query;
+
+    c.ref = q.ref;
+    c.title = q.title;
+    c.firstName = q.firstName;
+    c.lastName = q.lastName;
+    c.gender = q.gender;
+
+    c.contact.mobile = q.contact_mobile;
+    c.contact.workPhone = q.contact_workPhone;
+    c.contact.residence = q.contact_residence;
+    c.contact.email = q.contact.email;
+    c.contact.address = q.contact_address;
+    c.contact.city = q.contact_city;
+    c.contact.state = q.contact_state;
+    c.contact.zip = q.contact_zip;
+    c.contact.country = q.contact_country;
+    c.remarks = q.remarks;
+    c.performedBy = q.performedBy;
+    
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
+    });
+});
+
+app.get('/api/op/fetch/phone', function(req, res, next){
+  var Colle = require('./model/phone');
+    Colle.find().exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
+
+
+app.get('/api/op/delete/phone', function(req, res, next){
+    var Collec = require('./model/phone');
+    Collec.find({_id: req.query.id}).remove(function (err) {
+        if (err)
+            throw err
+        respon = {status: 1};
+        res.send(JSON.stringify(respon));
+    })
+});
+
+app.get('/api/op/edit/phone', function(req, res, next){
+    var Collec = require('./model/phone');
+    var c = new Coll();
+    var q = req.query;
+        
+    c.ref = q.ref;
+    c.title = q.title;
+    c.firstName = q.firstName;
+    c.lastName = q.lastName;
+    c.gender = q.gender;
+
+    c.contact.mobile = q.contact_mobile;
+    c.contact.workPhone = q.contact_workPhone;
+    c.contact.residence = q.contact_residence;
+    c.contact.email = q.contact.email;
+    c.contact.address = q.contact_address;
+    c.contact.city = q.contact_city;
+    c.contact.state = q.contact_state;
+    c.contact.zip = q.contact_zip;
+    c.contact.country = q.contact_country;
+    c.remarks = q.remarks;
+    c.performedBy = q.performedBy;
+    
+    Collec.findOneAndUpdate({ _id: q.id }, c.toObject(), function (err, data) {
+        if (err) {
+//            return next(err);
+            console.log();
+        }
+        console.log(data);
+        return data;
+    });
+});
+
+
+//WorkOrder
+app.get('/api/op/create/workorder', function (req, res, next) {
+    var Coll = require('./model/workOrder');
+    var c = new Coll();
+    var q = req.query;
+
+    c.date = q.date;
+    c.type = q.type;
+    c.workOrderNo = q.workOrderNo;
+    c.desc = q.desc;
+    c.assignedTo = q.assignedTo;
+    c.residence = q.residence;
+    c.room = q.room;
+    c.status = q.status;
+    c.dueDate = q.dueDate;
+    c.remarks = q.remarks;
+    c.performedBy = q.performedBy;
+    
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
+    });
+});
+
+app.get('/api/op/fetch/workorder', function(req, res, next){
+  var Colle = require('./model/workOrder');
+    Colle.find().exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
+
+
+app.get('/api/op/delete/phone', function(req, res, next){
+    var Collec = require('./model/workOrder');
+    Collec.find({_id: req.query.id}).remove(function (err) {
+        if (err)
+            throw err
+        respon = {status: 1};
+        res.send(JSON.stringify(respon));
+    })
+});
+
+app.get('/api/op/edit/phone', function(req, res, next){
+    var Collec = require('./model/workOrder');
+    var c = new Coll();
+    var q = req.query;
+        
+    c.date = q.date;
+    c.type = q.type;
+    c.workOrderNo = q.workOrderNo;
+    c.desc = q.desc;
+    c.assignedTo = q.assignedTo;
+    c.residence = q.residence;
+    c.room = q.room;
+    c.status = q.status;
+    c.dueDate = q.dueDate;
+    c.remarks = q.remarks;
+    c.performedBy = q.performedBy;
+    
+    Collec.findOneAndUpdate({ _id: q.id }, c.toObject(), function (err, data) {
+        if (err) {
+//            return next(err);
+            console.log();
+        }
+        console.log(data);
+        return data;
+    });
+});
+
+
+
+
+/****************************************************************************
+ *
+ *    Uploading and downloading image to the server
+ ***************************************************************************/
 //app.route('/api/op/static/upload')
 app.route('/api/op/static/upload')
     .post(upload.postImage);
@@ -894,7 +1324,6 @@ app.route('/api/op/static/upload')
 //SErve images
 app.get('/api/op/static/image', function (req, res) {
     var respon = {status: 0};
-    
     console.log(req.query);
     var image = req.query.imageId;
     console.log(imgDir+image);
@@ -903,54 +1332,14 @@ app.get('/api/op/static/image', function (req, res) {
     });
 });
 
-app.get('api/user/:uid/photos/:file', function (req, res) {
-    console.log(req.params.uid);
-    console.log(req.params.file);
-    
-//    var uid = req.params.uid, file = req.params.file;
-//    req.user.mayViewFilesFrom(uid, function (yes) {
-//        if (yes) {
-//            res.sendFile('/uploads/' + uid + '/' + file);
-//        } else {
-//            res.send(403, 'Sorry! you cant see that.');
-//        }
-//    });
-});
 
 
 
-app.get('/api/login', function (req, res) {
-//
-//    var email = req.param('email');
-//    var first = req.param('firstName');
-//    var last = req.param('lastName');
-//    var pass = req.param('pass');
-//    var phone = req.param('phone')
 
-    var email = req.body.email;
-    var first = req.body.firstName;
-    
-    
-//var User = require('./model/user');
-//// create a new user called chris
-//    var chris = new User({
-//        firstName: first,
-//        lastName : last,
-//        email : email,
-//        phone: phone,
-//        password: pass
-//        
-//    });
-//// call the built-in save method to save to the database
-//    chris.save(function (err) {
-//        if (err)
-//            throw err;
-//
-//        console.log('User saved successfully!');
-//    });
-    res.send(req.body);
-});
-
+/****************************************************************************
+ *
+ *    SERVER ERROR HANDLING...
+ ***************************************************************************/
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('Not Found');

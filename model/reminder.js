@@ -1,9 +1,8 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var deptSchema = new Schema({
+var sch = new Schema({
     name: String,
-    startDate : String,
     startTime: String,
     priority: String,
     message: String,
@@ -14,5 +13,5 @@ var deptSchema = new Schema({
     performedBy : {type : mongoose.Schema.Types.ObjectId , ref : 'User'}
 },{timestamps: true});
 
-var blogBost = mongoose.model('Reminder', deptSchema);
+var blogBost = mongoose.model('Reminders', sch);
 module.exports = blogBost;

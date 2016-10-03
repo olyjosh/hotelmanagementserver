@@ -1,8 +1,8 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var deptSchema = new Schema({
-    on: Date,
+var sch = new Schema({
+    onDate: Date,
     name: String,
     color: String,
     location: String,
@@ -28,5 +28,5 @@ var deptSchema = new Schema({
     performedBy : {type : mongoose.Schema.Types.ObjectId , ref : 'User'}
 },{timestamps: true});
 
-var blogBost = mongoose.model('LostFound', deptSchema);
+var blogBost = mongoose.model('LostFound', sch);
 module.exports = blogBost;

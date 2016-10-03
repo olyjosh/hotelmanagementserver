@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var bankDetailSchema = new Schema({
+var sch = new Schema({
     accNo : String,
     bankName : String,
     accName : String,
@@ -9,6 +9,6 @@ var bankDetailSchema = new Schema({
 });
 
 
-var Post = mongoose.model('BankDetail', bankDetailSchema);
+var Post = mongoose.model('BankDetail', sch);
 
 module.exports = Post;

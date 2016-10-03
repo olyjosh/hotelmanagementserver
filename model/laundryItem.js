@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var deptSchema = new Schema({
+var sch = new Schema({
     alias: String,
     name: String,
     code: String,
@@ -12,5 +12,5 @@ var deptSchema = new Schema({
     performedBy : {type : mongoose.Schema.Types.ObjectId , ref : 'User'}
 },{timestamps: true});
 
-var blogBost = mongoose.model('LaundryItem', deptSchema);
+var blogBost = mongoose.model('LaundryItem', sch);
 module.exports = blogBost;

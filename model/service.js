@@ -1,7 +1,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var deptSchema = new Schema({
+var sch = new Schema({
     alias: String,
     name: String,
     extraCharge: String,
@@ -11,5 +11,5 @@ var deptSchema = new Schema({
     performedBy : {type : mongoose.Schema.Types.ObjectId , ref : 'User'}
 },{timestamps: true});
 
-var blogBost = mongoose.model('Service', deptSchema);
+var blogBost = mongoose.model('Service', sch);
 module.exports = blogBost;
