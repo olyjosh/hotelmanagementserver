@@ -155,6 +155,17 @@ app.post('/api/login', function(req, res, next){
   })(req, res, next);
 });
 
+app.get('/api/op/fetch/staff', function(req, res, next){
+  var Colle = require('./model/user');
+    Colle.find({}).exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+    
+});
+
 /************************************************************
  * Room , room type and floor
  */
@@ -245,7 +256,7 @@ app.get('/api/op/fetch/roomstay', function(req, res, next){
   var q= req.query;
     var Colle = require('./model/booking');
     Colle.find(
-            {$and:[{checkIn :{$gte:q.d1}},{checkOut:{ $lte: q.d2 }}]}).populate('floor','roomType').exec( function (err, data) {
+            {$and:[{checkIn :{$gte:q.d1}},{checkOut:{ $lte: q.d2 }}]}).populate('room').exec( function (err, data) {
         if (err) {
             return next(err);
         }
@@ -985,7 +996,6 @@ app.get('/api/op/create/reminder', function (req, res, next) {
     var Coll = require('./model/reminder');
     var c = new Coll();
     var q = req.query;
-
 
     c.name=q.name;
     c.startTime=q.startTime;
