@@ -6,5 +6,5 @@ var sch = new Schema({
   shortName: String,
 },{timestamps: true});
 
-var blogBost = mongoose.model('Department', sch);
-module.exports = blogBost;
+var mod = mongoose.model('Department', sch);
+module.exports = mod;

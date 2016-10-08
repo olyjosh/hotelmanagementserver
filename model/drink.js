@@ -8,5 +8,5 @@ var drinkSchema = new Schema({
     article : { link: String, type : String /* can be website or just text*/ }
 },{timestamps: true});
 
-var blogBost = mongoose.model('Drink', drinkSchema);
-module.exports = blogBost;
+var mod = mongoose.model('Drink', drinkSchema);
+module.exports = mod;

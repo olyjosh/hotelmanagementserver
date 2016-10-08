@@ -31,5 +31,5 @@ var bookingSchema = new Schema({
   }
 },{timestamps: true});
 
-var blogBost = mongoose.model('Booking', bookingSchema);
-module.exports = blogBost;
+var mod = mongoose.model('Booking', bookingSchema);
+module.exports = mod;

@@ -28,5 +28,5 @@ var sch = new Schema({
     performedBy : {type : mongoose.Schema.Types.ObjectId , ref : 'User'}
 },{timestamps: true});
 
-var blogBost = mongoose.model('LostFound', sch);
-module.exports = blogBost;
+var mod = mongoose.model('LostFound', sch);
+module.exports = mod;

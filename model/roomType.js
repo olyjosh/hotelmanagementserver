@@ -20,5 +20,5 @@ var roomTypeSchema = new Schema({
   displayColor : String
 },{timestamps: true});
 
-var blogBost = mongoose.model('RoomType', roomTypeSchema);
-module.exports = blogBost;
+var mod = mongoose.model('RoomType', roomTypeSchema);
+module.exports = mod;

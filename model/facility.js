@@ -20,6 +20,6 @@ var facilitySchema = new Schema({
 },{timestamps: true});
 
 
-var blogBost = mongoose.model('Facility', facilitySchema);
+var mod = mongoose.model('Facility', facilitySchema);
 //var Friend = mongoose.Model('RoomType', roomType);
-module.exports = blogBost;
+module.exports = mod;

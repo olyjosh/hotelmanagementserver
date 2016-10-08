@@ -11,5 +11,5 @@ var sch = new Schema({
     performedBy : {type : mongoose.Schema.Types.ObjectId , ref : 'User'}
 },{timestamps: true});
 
-var blogBost = mongoose.model('Service', sch);
-module.exports = blogBost;
+var mod = mongoose.model('Service', sch);
+module.exports = mod;

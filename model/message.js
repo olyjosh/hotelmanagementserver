@@ -7,5 +7,5 @@ var MessageSchema = new Schema({
     message : String
 },{timestamps: true});
 
-var blogBost = mongoose.model('Message', MessageSchema);
-module.exports = blogBost;
+var mod = mongoose.model('Message', MessageSchema);
+module.exports = mod;

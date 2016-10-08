@@ -4,6 +4,7 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var rem = require('./reminders');
 
 var config = require('./bin/config');
 var routes = require('./routes/index');
@@ -116,7 +117,7 @@ app.post('/api/register', function(req, res, next){
   var staff = req.body.isStaff;
   if(staff){
       user.staff.isStaff = true;
-      user.staff.staffId = "00001"
+      user.staff.staffId = "00002"
       user.privilege = req.body.privilege
   }else{
       user.staff.isStaff = false;
@@ -157,7 +158,10 @@ app.post('/api/login', function(req, res, next){
 
 app.get('/api/op/fetch/staff', function(req, res, next){
   var Colle = require('./model/user');
-    Colle.find({}).exec( function (err, data) {
+  var q = req.query;
+  var arg = {};
+  if(q.privilege!==null)arg={privilege:q.privilege};
+    Colle.find(arg).select('-hash -salt -__v').exec( function (err, data) {
         if (err) {
             return next(err);
         }
@@ -165,6 +169,21 @@ app.get('/api/op/fetch/staff', function(req, res, next){
     });
     
 });
+
+
+//StaffComments
+app.get('/api/op/fetch/staffcomments', function(req, res, next){
+  var Colle = require('./model/staffComments');
+  var q = req.query;
+  Colle.find({staff:id}).exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+    
+});
+
 
 /************************************************************
  * Room , room type and floor
@@ -1322,6 +1341,84 @@ app.get('/api/op/edit/phone', function(req, res, next){
 
 
 
+/**************************************************************************
+ * 
+ * House Keeping
+ **************************************************************************/
+
+//Task
+app.get('/api/op/create/housekeeptask', function (req, res, next) {
+    var Coll = require('./model/houseKeepTask');
+    var c = new Coll();
+    var q = req.query;
+    c.date = q.date;
+    c.endDate = q.endDate;
+    c.desc = q.desc;
+    c.room = q.room;
+    c.interval = q.interval;
+    c.reminder = q.reminder;
+    var maids = q.maids.split(',');
+    console.log(maids);
+    c.maids = maids;
+    c.performedBy = q.performedBy;
+    
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
+    });
+});
+
+app.get('/api/op/fetch/housekeeptask', function(req, res, next){
+  var Colle = require('./model/houseKeepTask');
+    Colle.find().exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
+
+
+app.get('/api/op/delete/housekeeptask', function(req, res, next){
+    var Collec = require('./model/houseKeepTask');
+    Collec.find({_id: req.query.id}).remove(function (err) {
+        if (err)
+            throw err
+        respon = {status: 1};
+        res.send(JSON.stringify(respon));
+    })
+});
+
+app.get('/api/op/edit/housekeeptask', function(req, res, next){
+    var Collec = require('./model/houseKeepTask');
+    var c = new Coll();
+    var q = req.query;
+        
+    c.date = q.date;
+    c.endDate = q.endDate;
+    c.desc = q.desc;
+    c.room = q.room;
+    c.interval = q.interval;
+    c.reminder = q.reminder;
+    var maids = q.maids.split(',');
+    c.maids = maids;
+    c.performedBy = q.performedBy;
+    
+    
+    Collec.findOneAndUpdate({ _id: q.id }, c.toObject(), function (err, data) {
+        if (err) {
+//            return next(err);
+            console.log();
+        }
+        console.log(data);
+        return data;
+    });
+});
+
+
+
 /****************************************************************************
  *
  *    Uploading and downloading image to the server
@@ -1335,14 +1432,12 @@ app.route('/api/op/static/upload')
 app.get('/api/op/static/image', function (req, res) {
     var respon = {status: 0};
     console.log(req.query);
-    var image = req.query.imageId;
+    var image = req.query.id;
     console.log(imgDir+image);
     res.sendFile(imgDir+image,{maxAge:'5000'},function(){
         
     });
 });
-
-
 
 
 

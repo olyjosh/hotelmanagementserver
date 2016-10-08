@@ -7,5 +7,5 @@ var floorSchema = new Schema({
   desc: String,
 },{timestamps: true});
 
-var blogBost = mongoose.model('Floor', floorSchema);
-module.exports = blogBost;
+var mod = mongoose.model('Floor', floorSchema);
+module.exports = mod;

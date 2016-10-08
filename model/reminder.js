@@ -13,5 +13,5 @@ var sch = new Schema({
     performedBy : {type : mongoose.Schema.Types.ObjectId , ref : 'User'}
 },{timestamps: true});
 
-var blogBost = mongoose.model('Reminders', sch);
-module.exports = blogBost;
+var mod = mongoose.model('Reminders', sch);
+module.exports = mod;

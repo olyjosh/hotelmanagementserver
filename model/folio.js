@@ -8,5 +8,5 @@ var tranSchema = new Schema({
   performedOn : {type : mongoose.Schema.Types.ObjectId , ref : 'User'}
 },{timestamps: true});
 
-var blogBost = mongoose.model('Transaction', tranSchema);
-module.exports = blogBost;
+var mod = mongoose.model('Transaction', tranSchema);
+module.exports = mod;

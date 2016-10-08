@@ -11,8 +11,8 @@ var UserSchema = new Schema({
         username: {type: String}
     }
     ,
-    email: {type: String, required: true, unique: true},
-    phone: {type: String,required: true, unique: true},
+    email: {type: String, required: [true, 'email is required'], unique:[ true, 'email already exist']},
+    phone: {type: String,required: [true, 'phone is required'], unique:[ true, 'phone already exist']},
     staff : {
         isStaff : Boolean, 
         staffId : String,

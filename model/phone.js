@@ -22,5 +22,5 @@ var sch = new Schema({
     performedBy : {type : mongoose.Schema.Types.ObjectId , ref : 'User'}
 },{timestamps: true});
 
-var blogBost = mongoose.model('Phone', sch);
-module.exports = blogBost;
+var mod = mongoose.model('Phone', sch);
+module.exports = mod;

@@ -4,7 +4,6 @@ config.twitter = {};
 config.mongo = {};
 config.web = {};
 
-//config.default_stuff =  ['red','green','blue','apple','yellow','orange','politics'];
 config.twitter.user_name = process.env.TWITTER_USER || 'username';
 config.twitter.password=  process.env.TWITTER_PASSWORD || 'password';
 //config.mongo.uri = process.env.DUOSTACK_DB_REDIS;

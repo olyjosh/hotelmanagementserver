@@ -9,5 +9,5 @@ var MealSchema = new Schema({
     nutriDetait : String
 },{timestamps: true});
 
-var blogBost = mongoose.model('Meal', MealSchema);
-module.exports = blogBost;
+var mod = mongoose.model('Meal', MealSchema);
+module.exports = mod;

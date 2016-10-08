@@ -6,5 +6,5 @@ var MealSchema = new Schema({
     orderBy : {type : mongoose.Schema.Types.ObjectId , ref : 'User'}
 },{timestamps: true});
 
-var blogBost = mongoose.model('Meal', MealSchema);
-module.exports = blogBost;
+var mod = mongoose.model('Meal', MealSchema);
+module.exports = mod;
