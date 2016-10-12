@@ -1,5 +1,6 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+require('./facility')
 
 var sch = new Schema({
     date: Date,
@@ -8,7 +9,7 @@ var sch = new Schema({
     room: {type : mongoose.Schema.Types.ObjectId , ref : 'Facility'},
     interval : Number,
     reminder : Number, // hours or minutes before time 
-    maids : [],//[{type : mongoose.Schema.Types.ObjectId , ref : 'User'}],
+    maids : [String],//[{type : mongoose.Schema.Types.ObjectId , ref : 'User'}],
     performedBy : {type : mongoose.Schema.Types.ObjectId , ref : 'User'}
 },{timestamps: true});
 

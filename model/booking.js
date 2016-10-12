@@ -24,7 +24,7 @@ var bookingSchema = new Schema({
   payment : { 
       paid : Boolean, 
       amount : Number,
-      type : String,/*Cash, online, Mobile, Pos*/
+      type : String,/*Cash, Online, Mobile, Pos*/
       tax : Number,
       refId : Number,
       time : Date

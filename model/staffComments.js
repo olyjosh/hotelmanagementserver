@@ -3,9 +3,10 @@ var Schema = mongoose.Schema;
 require('./user');
 
 var schema = new Schema({
-    Staff : {type : mongoose.Schema.Types.ObjectId , ref : 'User'},
-    performedBy : {type : mongoose.Schema.Types.ObjectId , ref : 'User'},
-    comment : String
+    staff : String,
+    comment : String,
+    performedBy : {type : mongoose.Schema.Types.ObjectId , ref : 'User'}
+    
 },{timestamps: true});
 
 var mod = mongoose.model('StaffComments', schema);

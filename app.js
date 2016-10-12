@@ -14,12 +14,17 @@ var doc = require('./routes/doc');
 var app = express();
 var mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
+
 //mongoose.connect('mongodb://localhost/green');
+
+var autoIncrement = require('mongoose-auto-increment');
+autoIncrement.initialize(mongoose.connection);
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var jwt = require('jsonwebtoken');
 
 var upload = require('./upload');
+global.appRoot = path.resolve(__dirname);
 var imgDir = global.appRoot+'/res/images/upload/';
 var k = require('./model/const');  // some useful constants
 
@@ -74,13 +79,11 @@ app.use('/doc',doc);
 
 
 var verifyAuth = function (req, res, next) {
-//    console.log(JSON.stringify(req.headers.token));
     if (req.url.startsWith("/api/op/")) {
-        var token = req.headers.token; //"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1N2RlY2E1ZDM1ZmI5YTQ4N2JkZWI3MGYiLCJlbWFpbCI6Im9seWpvc2hvbmVAZ21haWwuY29tIiwibmFtZSI6eyJ1c2VybmFtZSI6ImFkbWluIiwiZmlyc3ROYW1lIjoiQWRtaW4iLCJsYXN0TmFtZSI6IkFkbWluIn0sImV4cCI6MTQ3NDgyMzM4OSwiaWF0IjoxNDc0MjE4NTg5fQ.bJIh7STXSMU2o4qNuG4SrsPlK4wYL2JeGvXZxgKM_Os";
+        var token = req.headers.token; 
         jwt.verify(token, 'MY_SECRET'  //    app.get('MY_SECRET')
                 , function (err, decoded) {
                     if (err) {
-                        // Failed token
                         res.status(401);
                         return res.json({status: 0, message: 'Invalid authentication, Please login'});
                     } else {
@@ -93,13 +96,14 @@ var verifyAuth = function (req, res, next) {
         next();
     }
 }
-
 app.use(verifyAuth); // Using the inteception created above
 
 
-/**
+
+/*******************************************************************************
  *  Create user(staff registeration), login  authentication
- **/
+ *
+ ******************************************************************************/
 
 app.post('/api/register', function(req, res, next){
   if(!req.body.username || !req.body.password){
@@ -147,14 +151,32 @@ app.post('/api/login', function(req, res, next){
     if(err){ return next(err); }
 
     if(user){
-      delete user.hash;
-      
+      //delete user.hash;
+      login(user._id, true);
       return res.json({status:1 ,token: user.generateJWT(), user : user});
     } else {
       return res.status(401).json(info);
     }
   })(req, res, next);
 });
+
+app.get('/api/op/logout', function(req, res, next){
+    login(req.query.id, false);
+    return res.json({status:1});
+});
+
+login= function(id,status){
+    var Coll = require('./model/logins');
+    var c = new Coll();
+    c.login=status;
+    c.user=id;  // this is the user I'm login or logout
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+//        return callback(true);
+    });
+}
 
 app.get('/api/op/fetch/staff', function(req, res, next){
   var Colle = require('./model/user');
@@ -175,11 +197,29 @@ app.get('/api/op/fetch/staff', function(req, res, next){
 app.get('/api/op/fetch/staffcomments', function(req, res, next){
   var Colle = require('./model/staffComments');
   var q = req.query;
-  Colle.find({staff:id}).exec( function (err, data) {
+  Colle.find({staff:q.id}).populate('performedBy','name').exec( function (err, data) {
+//  Colle.find({staff: q.id}).populate({path: 'performedBy',select: '-hash -_id',}).exec(function (err, data) {
+            
         if (err) {
             return next(err);
         }
         return res.json({status:1, message : data});
+    });
+    
+});
+
+app.get('/api/op/create/staffcomments', function(req, res, next){
+  var Coll = require('./model/staffComments');
+    var c = new Coll();
+    var q = req.query;
+    c.staff=q.staff;
+    c.comment=q.comment;
+    c.performedBy = q.performedBy;
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
     });
     
 });
@@ -444,7 +484,8 @@ app.get('/api/op/create/book', function(req, res, next){
     book.guest.firstName = q.firstName;
     book.guest.lastName = q.lastName;
     book.guest.phone = q.phone;
-    
+    recordTrans(q.status+ ' ',q.amount,0,0,q.amount,book.guest,q.performedBy);
+//    (desc,amount,discount,tax,total,paid,guest,performedBy)
 
     createGuest (q);
     changeRoomBookStatus(q.room, q.status,function(data){});
@@ -456,6 +497,49 @@ app.get('/api/op/create/book', function(req, res, next){
     return res.json({status:1, message : data});
   });
 });
+
+
+/*******************************************************************************
+ *  Some cool functions going down here.
+ *  Transaction recording, folios bla bla 
+ ******************************************************************************/
+
+recordTrans = function (desc,amount,discount,tax,total,paid,guest,performedBy){
+//  desc: String,
+//  amount: Number,
+//  discount : Number,
+//  tax : Number,    // Should be 0 if it's just a payment on 
+//  total : Number,
+//  paid : Number, // the amount paid yet
+//  //balance : Number,  // projection will do this
+//  guest : {
+//      firstName : String,
+//      lastName : String ,
+//      phone : String,
+//  },
+
+    var Coll = require('./model/transaction');
+    var c = new Coll();
+    c.desc=desc;
+    c.amount=amount;
+    c.discount=discount;
+    c.tax=tax;
+    c.total=total;
+    c.paid=paid;
+    c.guest=guest;
+    
+    c.performedBy = performedBy;
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
+    });
+    
+    
+    
+}
+
 
 changeRoomState= function(id,status,callback){
     var Fac = require('./model/facility');
@@ -1372,14 +1456,20 @@ app.get('/api/op/create/housekeeptask', function (req, res, next) {
 
 app.get('/api/op/fetch/housekeeptask', function(req, res, next){
   var Colle = require('./model/houseKeepTask');
-    Colle.find().exec( function (err, data) {
+  var q = req.query;
+  var crit = {};
+  if(q.id!==undefined){
+      console.log("THE ID "+q.id);
+      crit = {maids:q.id};
+  }
+  
+    Colle.find(crit).populate('room','name alias').exec( function (err, data) {
         if (err) {
             return next(err);
         }
         return res.json({status:1, message : data});
     });
 });
-
 
 app.get('/api/op/delete/housekeeptask', function(req, res, next){
     var Collec = require('./model/houseKeepTask');
@@ -1419,6 +1509,112 @@ app.get('/api/op/edit/housekeeptask', function(req, res, next){
 
 
 
+/**************************************************************************
+ * 
+ * Restaurant
+ **************************************************************************/
+
+//food
+app.get('/api/op/create/food', function (req, res, next) {
+    var Coll = require('./model/meal');
+    var c = new Coll();
+    var q = req.query;
+    c.name = q.name;
+    c.desc = q.desc;
+    c.img = q.img;
+    c.price=q.price;
+    if(q.video!==undefined)c.video=q.video;
+    if(q.article!==undefined)c.article=q.article;
+    c.performedBy = q.performedBy;
+    
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
+    });
+});
+
+app.get('/api/op/fetch/food', function(req, res, next){
+  var Colle = require('./model/meal');
+  var q = req.query;
+  
+    Colle.find().exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
+
+app.get('/api/op/delete/food', function(req, res, next){
+    var Collec = require('./model/meal');
+    Collec.find({_id: req.query.id}).remove(function (err) {
+        if (err)
+            throw err
+        respon = {status: 1};
+        res.send(JSON.stringify(respon));
+    })
+});
+
+app.get('/api/op/edit/food', function(req, res, next){
+    var Collec = require('./model/meal');
+    var c = new Coll();
+    var q = req.query;
+        
+    c.name = q.name;
+    c.desc = q.desc;
+    c.img = q.img;
+    c.price=q.price;
+    if(q.video!==undefined)c.video=q.video;
+    if(q.article!==undefined)c.article=q.article;
+    c.performedBy = q.performedBy;
+    
+    Collec.findOneAndUpdate({ _id: q.id }, c.toObject(), function (err, data) {
+        if (err) {
+//            return next(err);
+            console.log();
+        }
+        console.log(data);
+        return data;
+    });
+});
+
+//Orders
+//app.get('/api/op/create/orders', function (req, res, next) {
+//    var Coll = require('./model/order');
+//    var c = new Coll();
+//    var q = req.query;
+//    
+//    console.log("THE ARRAY : "+q.food);
+//    
+//    c.orders = JSON.parse(q.orders);
+//            //[{"text":"The text","food":"57fcf4381c7114122e59e894"},{"text":"The text","food":"57fcf4381c7114122e59e894"},{"text":"The text","food":"57fcf4381c7114122e59e894"}];
+////    q.array;
+//
+//    c.save(function (err, data) {
+//        if (err) {
+//            return next(err);
+//        }
+//        return res.json({status: 1, message: data})
+//    });
+//});
+
+//Entity
+app.get('/api/op/create/orders', function (req, res, next) {
+    var Coll = require('./model/entitySchema');
+    var c = new Coll();
+    //c.testvalue="I am";
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
+    });
+});
+
+
+
 /****************************************************************************
  *
  *    Uploading and downloading image to the server
@@ -1430,6 +1626,16 @@ app.route('/api/op/static/upload')
 
 //SErve images
 app.get('/api/op/static/image', function (req, res) {
+    var respon = {status: 0};
+    console.log(req.query);
+    var image = req.query.id;
+    console.log(imgDir+image);
+    res.sendFile(imgDir+image,{maxAge:'5000'},function(){
+        
+    });
+});
+
+app.get('/api/static/image', function (req, res) {
     var respon = {status: 0};
     console.log(req.query);
     var image = req.query.id;
