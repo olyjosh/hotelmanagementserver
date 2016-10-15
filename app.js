@@ -19,6 +19,7 @@ mongoose.Promise = global.Promise;
 
 var autoIncrement = require('mongoose-auto-increment');
 autoIncrement.initialize(mongoose.connection);
+
 var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var jwt = require('jsonwebtoken');
@@ -179,11 +180,11 @@ login= function(id,status){
 }
 
 app.get('/api/op/fetch/staff', function(req, res, next){
-  var Colle = require('./model/user');
+  var Coll = require('./model/user');
   var q = req.query;
   var arg = {};
   if(q.privilege!==null)arg={privilege:q.privilege};
-    Colle.find(arg).select('-hash -salt -__v').exec( function (err, data) {
+    Coll.find(arg).select('-hash -salt -__v').exec( function (err, data) {
         if (err) {
             return next(err);
         }
@@ -195,10 +196,10 @@ app.get('/api/op/fetch/staff', function(req, res, next){
 
 //StaffComments
 app.get('/api/op/fetch/staffcomments', function(req, res, next){
-  var Colle = require('./model/staffComments');
+  var Coll = require('./model/staffComments');
   var q = req.query;
-  Colle.find({staff:q.id}).populate('performedBy','name').exec( function (err, data) {
-//  Colle.find({staff: q.id}).populate({path: 'performedBy',select: '-hash -_id',}).exec(function (err, data) {
+  Coll.find({staff:q.id}).populate('performedBy','name').exec( function (err, data) {
+//  Coll.find({staff: q.id}).populate({path: 'performedBy',select: '-hash -_id',}).exec(function (err, data) {
             
         if (err) {
             return next(err);
@@ -251,9 +252,9 @@ app.get('/api/op/create/room', function (req, res, next) {
 });
 
 //app.get('/api/op/fetch/room', function(req, res, next){
-//  var Colle = require('./model/facility');
+//  var Coll = require('./model/facility');
 //
-//    Colle.find({}, function (err, data) {
+//    Coll.find({}, function (err, data) {
 //        if (err) {
 //            return next(err);
 //        }
@@ -263,8 +264,8 @@ app.get('/api/op/create/room', function (req, res, next) {
 //});
 
 app.get('/api/op/fetch/room', function(req, res, next){
-  var Colle = require('./model/facility');
-    Colle.find({}).populate('floor').populate('roomType').exec( function (err, data) {
+  var Coll = require('./model/facility');
+    Coll.find({}).populate('floor').populate('roomType').exec( function (err, data) {
         if (err) {
             return next(err);
         }
@@ -278,8 +279,8 @@ app.get('/api/op/fetch/vacantroom', function(req, res, next){
 //  var d1 = q.d1;
 //  var d2 =q.d2
  // "roomStatus.bookedStatus":k.RM_VACANT , 
-  var Colle = require('./model/facility');
-    Colle.find(
+  var Coll = require('./model/facility');
+    Coll.find(
             {$and:[{"roomStatus.bookedStatus":k.RM_VACANT},{"roomStatus.state":{ $ne: k.RM_DISORDER }}]}).populate('floor','roomType').exec( function (err, data) {
         if (err) {
             return next(err);
@@ -293,8 +294,8 @@ app.get('/api/op/fetch/outoforder', function(req, res, next){
 //  var d1 = q.d1;
 //  var d2 =q.d2
  // "roomStatus.bookedStatus":k.RM_VACANT , 
-  var Colle = require('./model/facility');
-    Colle.find({"roomStatus.state" : k.RM_DISORDER}).exec( function (err, data) {
+  var Coll = require('./model/facility');
+    Coll.find({"roomStatus.state" : k.RM_DISORDER}).exec( function (err, data) {
         if (err) {
             return next(err);
         }
@@ -313,8 +314,8 @@ app.get('/api/op/edit/outoforder', function(req, res, next){
 
 app.get('/api/op/fetch/roomstay', function(req, res, next){
   var q= req.query;
-    var Colle = require('./model/booking');
-    Colle.find(
+    var Coll = require('./model/booking');
+    Coll.find(
             {$and:[{checkIn :{$gte:q.d1}},{checkOut:{ $lte: q.d2 }}]}).populate('room').exec( function (err, data) {
         if (err) {
             return next(err);
@@ -426,8 +427,8 @@ app.get('/api/op/create/roomtype', function(req, res, next){
 });
 
 app.get('/api/op/fetch/roomtype', function(req, res, next){
-    var Collec = require('./model/roomType');
-    Collec.find({}, function (err, data) {
+    var Coll = require('./model/roomType');
+    Coll.find({}, function (err, data) {
         if (err) {
 //            throw err;
             return next(err);
@@ -442,9 +443,9 @@ app.get('/api/op/edit/roomtype', function(req, res, next){
 
 app.get('/api/op/delete/roomtype', function (req, res, next) {
     var id = req.query.id;
-    var Collec = require('./model/roomType');
+    var Coll = require('./model/roomType');
 
-    Collec.find({id: id}).remove(function (err) {
+    Coll.find({id: id}).remove(function (err) {
         if (err)
             throw err
         respon = {status: 1};
@@ -517,6 +518,7 @@ recordTrans = function (desc,amount,discount,tax,total,paid,guest,performedBy){
 //      lastName : String ,
 //      phone : String,
 //  },
+
 
     var Coll = require('./model/transaction');
     var c = new Coll();
@@ -601,8 +603,8 @@ var createGuest = function (q) {
 }
 
 app.get('/api/op/fetch/book', function(req, res, next){
-    var Collec = require('./model/booking');
-    Collec.find({}).populate('room').exec(function (err, data) {
+    var Coll = require('./model/booking');
+    Coll.find({}).populate('room').exec(function (err, data) {
         if (err) {
             return next(err);
         }
@@ -618,12 +620,12 @@ app.get('/api/op/edit/book', function(req, res, next){
 
 app.get('/api/op/create/checkin', function(req, res, next){
   var q = req.query;
-  var Collec = require('./model/booking');
-  var book = new Collec();
+  var Coll = require('./model/booking');
+  var book = new Coll();
   book.isCheckIn = true;
   book.arrival = q.arrival;
   
-    Collec.findByIdAndUpdate(q.id, {$push: {isCheckIn: true, arrival: q.arrival}}, function (err, data) {
+    Coll.findByIdAndUpdate(q.id, {$push: {isCheckIn: true, arrival: q.arrival}}, function (err, data) {
         if (err) {
             return next(err);
         }
@@ -634,9 +636,9 @@ app.get('/api/op/create/checkin', function(req, res, next){
 
 app.get('/api/op/delete/book', function (req, res, next) {
     var id = req.query.id;
-    var Collec = require('./model/booking');
+    var Coll = require('./model/booking');
 
-    Collec.find({_id: id}).remove(function (err) {
+    Coll.find({_id: id}).remove(function (err) {
         if (err)
             throw err
         respon = {status: 1};
@@ -654,9 +656,9 @@ app.get('/api/op/cancel/book', function(req, res, next){
  * 
  */
 app.get('/api/op/fetch/guests', function(req, res, next){
-    var Collec = require('./model/guest');
+    var Coll = require('./model/guest');
     //isCheckIn : false,
-    Collec.find({$and: [ {isCheckIn: true },{ "staff.isStaff":false}]}, function (err, data) {
+    Coll.find({$and: [ {isCheckIn: true },{ "staff.isStaff":false}]}, function (err, data) {
         if (err) {
 //            throw err;
             return next(err);
@@ -668,9 +670,9 @@ app.get('/api/op/fetch/guests', function(req, res, next){
 });
 
 app.get('/api/op/fetch/customers', function(req, res, next){
-    var Collec = require('./model/guest');
+    var Coll = require('./model/guest');
     //isCheckIn : false,
-    Collec.find({}, function (err, data) {
+    Coll.find({}, function (err, data) {
         if (err) {
 //            throw err;
             return next(err);
@@ -683,11 +685,11 @@ app.get('/api/op/fetch/customers', function(req, res, next){
 
 
 app.get('/api/op/fetch/message', function(req, res, next){
-    var Collec = require('./model/message');
+    var Coll = require('./model/message');
     //isCheckIn : false,
     var q = req.query;
     var phone = q.phone;
-    Collec.find({$or: [ {from: phone },{ to:phone}]}, function (err, data) {
+    Coll.find({$or: [ {from: phone },{ to:phone}]}, function (err, data) {
         if (err) {
 //            throw err;
             return next(err);
@@ -738,8 +740,8 @@ app.get('/api/op/create/laundryitem', function (req, res, next) {
 });
 
 app.get('/api/op/fetch/laundryitem', function(req, res, next){
-  var Colle = require('./model/laundryItem');
-    Colle.find().exec( function (err, data) {
+  var Coll = require('./model/laundryItem');
+    Coll.find().exec( function (err, data) {
         if (err) {
             return next(err);
         }
@@ -749,8 +751,8 @@ app.get('/api/op/fetch/laundryitem', function(req, res, next){
 
 
 app.get('/api/op/delete/laundryitem', function(req, res, next){
-    var Collec = require('./model/laundryItem');
-    Collec.find({_id: req.query.id}).remove(function (err) {
+    var Coll = require('./model/laundryItem');
+    Coll.find({_id: req.query.id}).remove(function (err) {
         if (err)
             throw err
         respon = {status: 1};
@@ -760,8 +762,8 @@ app.get('/api/op/delete/laundryitem', function(req, res, next){
 });
 
 app.get('/api/op/edit/laundryitem', function(req, res, next){
-    var Collec = require('./model/laundryItem');
-    var c = new Coll();
+    var Coll = require('./model/laundryItem');
+    var c = {}; //new Coll();
     var q = req.query;
     c.alias=q.alis;
     c.name=q.name;
@@ -771,14 +773,16 @@ app.get('/api/op/edit/laundryitem', function(req, res, next){
     c.itemImage=q.itemImage;
     c.desc=q.desc;
     c.performedBy = q.performedBy;
-    
-    Collec.findOneAndUpdate({ _id: q.id }, c.toObject(), function (err, data) {
+
+    Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
         if (err) {
-//            return next(err);
+
             console.log();
+//            return next(err);
+            return res.json({status: 0, message: err})
         }
         console.log(data);
-        return data;
+        return res.json({status: 1, message: data});
     });
 });
 
@@ -809,8 +813,8 @@ app.get('/api/op/fetch/service', function(req, res, next){
     
     var query = {};
     if(q.service!==null)query={service:q.service};
-  var Colle = require('./model/service');
-    Colle.find(query).exec( function (err, data) {
+  var Coll = require('./model/service');
+    Coll.find(query).exec( function (err, data) {
         if (err) {
             return next(err);
         }
@@ -820,8 +824,8 @@ app.get('/api/op/fetch/service', function(req, res, next){
 
 
 app.get('/api/op/delete/service', function(req, res, next){
-    var Collec = require('./model/service');
-    Collec.find({_id: req.query.id}).remove(function (err) {
+    var Coll = require('./model/service');
+    Coll.find({_id: req.query.id}).remove(function (err) {
         if (err)
             throw err
         respon = {status: 1};
@@ -831,8 +835,8 @@ app.get('/api/op/delete/service', function(req, res, next){
 });
 
 app.get('/api/op/edit/service', function(req, res, next){
-    var Collec = require('./model/service');
-    var c = new Coll();
+    var Coll = require('./model/service');
+    var c = {};//new Coll();
     var q = req.query;
     c.alias=q.alis;
     c.name=q.name;
@@ -841,14 +845,16 @@ app.get('/api/op/edit/service', function(req, res, next){
     c.image=q.image;
     c.service =  q.service;
     c.performedBy = q.performedBy;
-    
-    Collec.findOneAndUpdate({ _id: q.id }, c.toObject(),  function (err, data) {
+
+    Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
         if (err) {
-//            return next(err);
+
             console.log();
+//            return next(err);
+            return res.json({status: 0, message: err})
         }
         console.log(data);
-        return data;
+        return res.json({status: 1, message: data});
     });
 });
 
@@ -872,8 +878,8 @@ app.get('/api/op/create/returnin', function (req, res, next) {
 });
 
 app.get('/api/op/fetch/returnin', function(req, res, next){
-  var Colle = require('./model/returnIn');
-    Colle.find().exec( function (err, data) {
+  var Coll = require('./model/returnIn');
+    Coll.find().exec( function (err, data) {
         if (err) {
             return next(err);
         }
@@ -883,8 +889,8 @@ app.get('/api/op/fetch/returnin', function(req, res, next){
 
 
 app.get('/api/op/delete/returnin', function(req, res, next){
-    var Collec = require('./model/returnIn');
-    Collec.find({_id: req.query.id}).remove(function (err) {
+    var Coll = require('./model/returnIn');
+    Coll.find({_id: req.query.id}).remove(function (err) {
         if (err)
             throw err
         respon = {status: 1};
@@ -894,8 +900,8 @@ app.get('/api/op/delete/returnin', function(req, res, next){
 });
 
 app.get('/api/op/edit/returnin', function(req, res, next){
-    var Collec = require('./model/returnIn');
-    var c = new Coll();
+    var Coll = require('./model/returnIn');
+    var c = {};//new Coll();
     var q = req.query;
     c.alias=q.alis;
     c.name=q.name;
@@ -903,14 +909,16 @@ app.get('/api/op/edit/returnin', function(req, res, next){
     c.desc=q.desc;
     c.image=q.image;
     c.performedBy = q.performedBy;
-    
-    Collec.findOneAndUpdate({ _id: q.id }, c.toObject(),  function (err, data) {
+
+    Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
         if (err) {
-//            return next(err);
+
             console.log();
+//            return next(err);
+            return res.json({status: 0, message: err})
         }
         console.log(data);
-        return data;
+        return res.json({status: 1, message: data});
     });
 });
 
@@ -945,8 +953,8 @@ app.get('/api/op/create/dailylaundry', function (req, res, next) {
 });
 
 app.get('/api/op/fetch/dailylaundry', function(req, res, next){
-  var Colle = require('./model/dailyLaundry');
-    Colle.find().exec( function (err, data) {
+  var Coll = require('./model/dailyLaundry');
+    Coll.find().exec( function (err, data) {
         if (err) {
             return next(err);
         }
@@ -956,8 +964,8 @@ app.get('/api/op/fetch/dailylaundry', function(req, res, next){
 
 
 app.get('/api/op/delete/dailylaundry', function(req, res, next){
-    var Collec = require('./model/dailyLaundry');
-    Collec.find({_id: req.query.id}).remove(function (err) {
+    var Coll = require('./model/dailyLaundry');
+    Coll.find({_id: req.query.id}).remove(function (err) {
         if (err)
             throw err
         respon = {status: 1};
@@ -967,8 +975,8 @@ app.get('/api/op/delete/dailylaundry', function(req, res, next){
 });
 
 app.get('/api/op/edit/dailylaundry', function(req, res, next){
-    var Collec = require('./model/dailyLaundry');
-    var c = new Coll();
+    var Coll = require('./model/dailyLaundry');
+    var c = {};//new Coll();
     var q = req.query;
     c.sn=q.sn;
     c.date=q.date;
@@ -985,13 +993,15 @@ app.get('/api/op/edit/dailylaundry', function(req, res, next){
     c.remark=q.remark;
     c.performedBy = q.performedBy;
     
-    Collec.findOneAndUpdate({ _id: q.id }, c.toObject(), function (err, data) {
+    Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
         if (err) {
-//            return next(err);
+
             console.log();
+//            return next(err);
+            return res.json({status: 0, message: err})
         }
         console.log(data);
-        return data;
+        return res.json({status: 1, message: data});
     });
 });
 
@@ -1037,8 +1047,8 @@ app.get('/api/op/create/lostfound', function (req, res, next) {
 });
 
 app.get('/api/op/fetch/lostfound', function(req, res, next){
-  var Colle = require('./model/lostFound');
-    Colle.find().exec( function (err, data) {
+  var Coll = require('./model/lostFound');
+    Coll.find().exec( function (err, data) {
         if (err) {
             return next(err);
         }
@@ -1048,8 +1058,8 @@ app.get('/api/op/fetch/lostfound', function(req, res, next){
 
 
 app.get('/api/op/delete/lostfound', function(req, res, next){
-    var Collec = require('./model/lostFound');
-    Collec.find({_id: req.query.id}).remove(function (err) {
+    var Coll = require('./model/lostFound');
+    Coll.find({_id: req.query.id}).remove(function (err) {
         if (err)
             throw err
         respon = {status: 1};
@@ -1059,8 +1069,8 @@ app.get('/api/op/delete/lostfound', function(req, res, next){
 });
 
 app.get('/api/op/edit/lostfound', function(req, res, next){
-    var Collec = require('./model/lostFound');
-    var c = new Coll();
+    var Coll = require('./model/lostFound');
+    var c = {};//new Coll();
     var q = req.query;
         
     c.on=q.on;
@@ -1084,13 +1094,15 @@ app.get('/api/op/edit/lostfound', function(req, res, next){
     c.remark = q.remark;
     c.performedBy = q.performedBy;
     
-    Collec.findOneAndUpdate({ _id: q.id }, c.toObject(), function (err, data) {
+    Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
         if (err) {
-//            return next(err);
+
             console.log();
+//            return next(err);
+            return res.json({status: 0, message: err})
         }
         console.log(data);
-        return data;
+        return res.json({status: 1, message: data});
     });
 });
 
@@ -1121,8 +1133,8 @@ app.get('/api/op/create/reminder', function (req, res, next) {
 });
 
 app.get('/api/op/fetch/reminder', function(req, res, next){
-  var Colle = require('./model/reminder');
-    Colle.find().exec( function (err, data) {
+  var Coll = require('./model/reminder');
+    Coll.find().exec( function (err, data) {
         if (err) {
             return next(err);
         }
@@ -1132,8 +1144,8 @@ app.get('/api/op/fetch/reminder', function(req, res, next){
 
 
 app.get('/api/op/delete/reminder', function(req, res, next){
-    var Collec = require('./model/reminder');
-    Collec.find({_id: req.query.id}).remove(function (err) {
+    var Coll = require('./model/reminder');
+    Coll.find({_id: req.query.id}).remove(function (err) {
         if (err)
             throw err
         respon = {status: 1};
@@ -1143,8 +1155,8 @@ app.get('/api/op/delete/reminder', function(req, res, next){
 });
 
 app.get('/api/op/edit/reminder', function(req, res, next){
-    var Collec = require('./model/reminder');
-    var c = new Coll();
+    var Coll = require('./model/reminder');
+    var c = {};//new Coll();
     var q = req.query;
         
     c.name=q.name;
@@ -1156,14 +1168,16 @@ app.get('/api/op/edit/reminder', function(req, res, next){
     c.stopAfter=q.stopAfter;
     var reci = q.receivers.split(',');
     c.receivers=reci;
-    
-    Collec.findOneAndUpdate({ _id: q.id }, c.toObject(), function (err, data) {
+
+    Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
         if (err) {
-//            return next(err);
+
             console.log();
+//            return next(err);
+            return res.json({status: 0, message: err})
         }
         console.log(data);
-        return data;
+        return res.json({status: 1, message: data});
     });
 });
 
@@ -1202,8 +1216,8 @@ app.get('/api/op/create/account', function (req, res, next) {
 });
 
 app.get('/api/op/fetch/account', function(req, res, next){
-  var Colle = require('./model/account');
-    Colle.find().exec( function (err, data) {
+  var Coll = require('./model/account');
+    Coll.find().exec( function (err, data) {
         if (err) {
             return next(err);
         }
@@ -1213,8 +1227,8 @@ app.get('/api/op/fetch/account', function(req, res, next){
 
 
 app.get('/api/op/delete/account', function(req, res, next){
-    var Collec = require('./model/account');
-    Collec.find({_id: req.query.id}).remove(function (err) {
+    var Coll = require('./model/account');
+    Coll.find({_id: req.query.id}).remove(function (err) {
         if (err)
             throw err
         respon = {status: 1};
@@ -1224,8 +1238,8 @@ app.get('/api/op/delete/account', function(req, res, next){
 });
 
 app.get('/api/op/edit/account', function(req, res, next){
-    var Collec = require('./model/account');
-    var c = new Coll();
+    var Coll = require('./model/account');
+    var c = {};//new Coll();
     var q = req.query;
         
     c.alis=q.alis;
@@ -1250,14 +1264,16 @@ app.get('/api/op/edit/account', function(req, res, next){
     
     var reci = q.receivers.split(',');
     c.receivers=reci;
-    
-    Collec.findOneAndUpdate({ _id: q.id }, c.toObject(), function (err, data) {
+
+    Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
         if (err) {
-//            return next(err);
+
             console.log();
+//            return next(err);
+            return res.json({status: 0, message: err})
         }
         console.log(data);
-        return data;
+        return res.json({status: 1, message: data});
     });
 });
 
@@ -1294,8 +1310,8 @@ app.get('/api/op/create/phone', function (req, res, next) {
 });
 
 app.get('/api/op/fetch/phone', function(req, res, next){
-  var Colle = require('./model/phone');
-    Colle.find().exec( function (err, data) {
+  var Coll = require('./model/phone');
+    Coll.find().exec( function (err, data) {
         if (err) {
             return next(err);
         }
@@ -1305,8 +1321,8 @@ app.get('/api/op/fetch/phone', function(req, res, next){
 
 
 app.get('/api/op/delete/phone', function(req, res, next){
-    var Collec = require('./model/phone');
-    Collec.find({_id: req.query.id}).remove(function (err) {
+    var Coll = require('./model/phone');
+    Coll.find({_id: req.query.id}).remove(function (err) {
         if (err)
             throw err
         respon = {status: 1};
@@ -1315,8 +1331,8 @@ app.get('/api/op/delete/phone', function(req, res, next){
 });
 
 app.get('/api/op/edit/phone', function(req, res, next){
-    var Collec = require('./model/phone');
-    var c = new Coll();
+    var Coll = require('./model/phone');
+    var c = {};//new Coll();
     var q = req.query;
         
     c.ref = q.ref;
@@ -1337,13 +1353,15 @@ app.get('/api/op/edit/phone', function(req, res, next){
     c.remarks = q.remarks;
     c.performedBy = q.performedBy;
     
-    Collec.findOneAndUpdate({ _id: q.id }, c.toObject(), function (err, data) {
+        Coll.findOneAndUpdate({ _id: q.id }, c, function (err, data) {
         if (err) {
-//            return next(err);
+            
             console.log();
+//            return next(err);
+            return res.json({status: 0, message: err})
         }
         console.log(data);
-        return data;
+        return res.json({status: 1, message: data});
     });
 });
 
@@ -1375,8 +1393,8 @@ app.get('/api/op/create/workorder', function (req, res, next) {
 });
 
 app.get('/api/op/fetch/workorder', function(req, res, next){
-  var Colle = require('./model/workOrder');
-    Colle.find().exec( function (err, data) {
+  var Coll = require('./model/workOrder');
+    Coll.find().exec( function (err, data) {
         if (err) {
             return next(err);
         }
@@ -1386,8 +1404,8 @@ app.get('/api/op/fetch/workorder', function(req, res, next){
 
 
 app.get('/api/op/delete/phone', function(req, res, next){
-    var Collec = require('./model/workOrder');
-    Collec.find({_id: req.query.id}).remove(function (err) {
+    var Coll = require('./model/workOrder');
+    Coll.find({_id: req.query.id}).remove(function (err) {
         if (err)
             throw err
         respon = {status: 1};
@@ -1396,8 +1414,8 @@ app.get('/api/op/delete/phone', function(req, res, next){
 });
 
 app.get('/api/op/edit/phone', function(req, res, next){
-    var Collec = require('./model/workOrder');
-    var c = new Coll();
+    var Coll = require('./model/workOrder');
+    var c = {}; //new Coll();
     var q = req.query;
         
     c.date = q.date;
@@ -1411,14 +1429,16 @@ app.get('/api/op/edit/phone', function(req, res, next){
     c.dueDate = q.dueDate;
     c.remarks = q.remarks;
     c.performedBy = q.performedBy;
-    
-    Collec.findOneAndUpdate({ _id: q.id }, c.toObject(), function (err, data) {
+
+    Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
         if (err) {
-//            return next(err);
+
             console.log();
+//            return next(err);
+            return res.json({status: 0, message: err})
         }
         console.log(data);
-        return data;
+        return res.json({status: 1, message: data});
     });
 });
 
@@ -1455,7 +1475,7 @@ app.get('/api/op/create/housekeeptask', function (req, res, next) {
 });
 
 app.get('/api/op/fetch/housekeeptask', function(req, res, next){
-  var Colle = require('./model/houseKeepTask');
+  var Coll = require('./model/houseKeepTask');
   var q = req.query;
   var crit = {};
   if(q.id!==undefined){
@@ -1463,7 +1483,7 @@ app.get('/api/op/fetch/housekeeptask', function(req, res, next){
       crit = {maids:q.id};
   }
   
-    Colle.find(crit).populate('room','name alias').exec( function (err, data) {
+    Coll.find(crit).populate('room','name alias').exec( function (err, data) {
         if (err) {
             return next(err);
         }
@@ -1472,8 +1492,8 @@ app.get('/api/op/fetch/housekeeptask', function(req, res, next){
 });
 
 app.get('/api/op/delete/housekeeptask', function(req, res, next){
-    var Collec = require('./model/houseKeepTask');
-    Collec.find({_id: req.query.id}).remove(function (err) {
+    var Coll = require('./model/houseKeepTask');
+    Coll.find({_id: req.query.id}).remove(function (err) {
         if (err)
             throw err
         respon = {status: 1};
@@ -1482,8 +1502,8 @@ app.get('/api/op/delete/housekeeptask', function(req, res, next){
 });
 
 app.get('/api/op/edit/housekeeptask', function(req, res, next){
-    var Collec = require('./model/houseKeepTask');
-    var c = new Coll();
+    var Coll = require('./model/houseKeepTask');
+    var c = {};//new Coll();
     var q = req.query;
         
     c.date = q.date;
@@ -1496,14 +1516,16 @@ app.get('/api/op/edit/housekeeptask', function(req, res, next){
     c.maids = maids;
     c.performedBy = q.performedBy;
     
-    
-    Collec.findOneAndUpdate({ _id: q.id }, c.toObject(), function (err, data) {
+
+    Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
         if (err) {
-//            return next(err);
+
             console.log();
+//            return next(err);
+            return res.json({status: 0, message: err})
         }
         console.log(data);
-        return data;
+        return res.json({status: 1, message: data});
     });
 });
 
@@ -1536,10 +1558,10 @@ app.get('/api/op/create/food', function (req, res, next) {
 });
 
 app.get('/api/op/fetch/food', function(req, res, next){
-  var Colle = require('./model/meal');
+  var Coll = require('./model/meal');
   var q = req.query;
   
-    Colle.find().exec( function (err, data) {
+    Coll.find().exec( function (err, data) {
         if (err) {
             return next(err);
         }
@@ -1548,8 +1570,8 @@ app.get('/api/op/fetch/food', function(req, res, next){
 });
 
 app.get('/api/op/delete/food', function(req, res, next){
-    var Collec = require('./model/meal');
-    Collec.find({_id: req.query.id}).remove(function (err) {
+    var Coll = require('./model/meal');
+    Coll.find({_id: req.query.id}).remove(function (err) {
         if (err)
             throw err
         respon = {status: 1};
@@ -1558,10 +1580,9 @@ app.get('/api/op/delete/food', function(req, res, next){
 });
 
 app.get('/api/op/edit/food', function(req, res, next){
-    var Collec = require('./model/meal');
-    var c = new Coll();
+    var Coll = require('./model/meal');
+    var c = {};//new Coll();
     var q = req.query;
-        
     c.name = q.name;
     c.desc = q.desc;
     c.img = q.img;
@@ -1570,41 +1591,37 @@ app.get('/api/op/edit/food', function(req, res, next){
     if(q.article!==undefined)c.article=q.article;
     c.performedBy = q.performedBy;
     
-    Collec.findOneAndUpdate({ _id: q.id }, c.toObject(), function (err, data) {
+    Coll.findOneAndUpdate({ _id: q.id }, c, function (err, data) {
         if (err) {
-//            return next(err);
-            console.log();
+            return res.json({status: 0, message: err})
         }
         console.log(data);
-        return data;
+        return res.json({status: 1, message: data});
     });
 });
 
 //Orders
-//app.get('/api/op/create/orders', function (req, res, next) {
-//    var Coll = require('./model/order');
-//    var c = new Coll();
-//    var q = req.query;
-//    
-//    console.log("THE ARRAY : "+q.food);
-//    
-//    c.orders = JSON.parse(q.orders);
-//            //[{"text":"The text","food":"57fcf4381c7114122e59e894"},{"text":"The text","food":"57fcf4381c7114122e59e894"},{"text":"The text","food":"57fcf4381c7114122e59e894"}];
-////    q.array;
-//
-//    c.save(function (err, data) {
-//        if (err) {
-//            return next(err);
-//        }
-//        return res.json({status: 1, message: data})
-//    });
-//});
-
-//Entity
-app.get('/api/op/create/orders', function (req, res, next) {
-    var Coll = require('./model/entitySchema');
+app.get('/api/op/create/foodorders', function (req, res, next) {
+    var Coll = require('./model/foodOrder');
     var c = new Coll();
-    //c.testvalue="I am";
+    var q = req.query;
+    
+    c.channel = q.channel;
+    c.guest.firstName = q.guest_firstName; 
+    c.guest.lastName = q.guest_lastName; 
+    c.guest.phone = q.guest_phone; 
+    // to be calculated
+    var ord = JSON.parse(q.orders);
+    var amt = 0;
+    for (var i = 0; i < ord.length; i++) {
+        amt += (ord[i].price * ord[i].qty)
+    }
+    c.amount = amt;
+    c.balance = amt;
+    c.orders = ord;
+    if(k.channel_FRONT===q.channel){
+        c.performedBy =c.performedBy;
+    }
     c.save(function (err, data) {
         if (err) {
             return next(err);
@@ -1612,6 +1629,143 @@ app.get('/api/op/create/orders', function (req, res, next) {
         return res.json({status: 1, message: data})
     });
 });
+
+
+app.get('/api/op/pay/foodorders', function (req, res, next) {
+    var q = req.query;
+    var c = {};
+    c.amtPaid = q.amtPaid;
+    c._id = q.id
+    var performedBy = q.performedBy;
+    var Coll = require('./model/foodOrder');
+    Coll.findOne({username: oldUsername}, function (err, data) {
+        data.balance = data.balance - amtPaid;
+        data.payment = true;
+
+//    recordTrans(q.status+ ' ',c.amtPaid,0,0,q.amount,book.guest,q.performedBy);
+        data.save(function (err) {
+            if (err) {
+                return next(err);
+            }
+            return res.json({status: 1, message: data})
+        });
+    });
+});
+
+app.get('/api/op/fetch/foodorders', function(req, res, next){
+    
+    var Coll = require('./model/foodOrder');
+    var q = req.query;
+    var cha = q.channel;
+    var date2;
+    var find;
+    if(q.d2 ===undefined){
+        date2 = new Date();
+    }
+    
+    if(q.d1!==undefined && cha!==undefined){
+//        $and:[{checkIn :{$gte:q.d1}},{checkOut:{ $lte: q.d2 }}]
+        find =Coll.find({$and:[{channel : cha},{createdAt:{$gte :q.d1}},{createdAt:{$lte :q.date2}}]});
+    }else if(cha!==undefined && q.d1 ===undefined){
+        find =Coll.find({channel : cha});
+    }else if(cha===undefined && q.d1 !==undefined){
+        find =Coll.find({$and : [{createdAt:{$gte :q.d1}},{createdAt:{$lte :q.date2}}]});
+    }else{
+        find =Coll.find();
+    }
+  
+    find.populate('orders.food','name -_id').exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
+
+
+app.get('/api/op/pay/foodorders', function (req, res, next) {
+    var q = req.query;
+    var c = {};
+    c.amtPaid = q.amtPaid;
+    c._id = q.id
+    var performedBy = q.performedBy;
+    var Coll = require('./model/foodOrder');
+    Coll.findOne({username: oldUsername}, function (err, data) {
+        data.balance = data.balance - amtPaid;
+        data.payment = true;
+
+//    recordTrans(q.status+ ' ',c.amtPaid,0,0,q.amount,book.guest,q.performedBy);
+        data.save(function (err) {
+            if (err) {
+                return next(err);
+            }
+            return res.json({status: 1, message: data})
+        });
+    });
+});
+
+app.get('/api/op/cancel/foodorders', function (req, res, next) {
+    var q = req.query;
+    var Coll = require('./model/foodOrder');
+    Coll.findOne({_id: q.id}, function (err, data) {
+        if (data.status === k.ORDER_DONE || data.status ===  k.ORDER_PREPARING) {
+            return res.json({status: 0, message: 'Order can no longer be cancel as food is in preparation or done'});
+        } else {
+            data.status = k.ORDER_CANCEL;
+            if (q.channel == k.channel_FRONT) {
+                data.cancelBy = q.performedBy;
+            }
+            data.save(function (err) {
+                if (err) {
+                    return next(err);
+                }
+                return res.json({status: 1, message: data});
+            });
+        }
+
+    });
+});
+
+app.get('/api/op/approve/foodorders', function (req, res, next) {
+    var q = req.query;
+    var Coll = require('./model/foodOrder');
+    Coll.findOne({_id: q.id}, function (err, data) {
+        data.status = k.ORDER_PREPARING;
+        data.save(function (err) {
+            if (err) {
+                return next(err);
+            }
+            return res.json({status: 1, message: data});
+        });
+    });
+});
+
+app.get('/api/op/done/foodorders', function (req, res, next) {
+    var q = req.query;
+    var Coll = require('./model/foodOrder');
+    Coll.findOne({_id: q.id}, function (err, data) {
+        data.status = k.ORDER_DONE;
+        data.save(function (err) {
+            if (err) {
+                return next(err);
+            }
+            return res.json({status: 1, message: data});
+        });
+    });
+});
+
+
+////Entity
+//app.get('/api/op/create/ordersy', function (req, res, next) {
+//    var q = req.query;
+//    var ord = JSON.parse(q.orders);
+//    var amt = 0;
+//    for (var i = 0; i < ord.length; i++) {
+//        amt += (ord[i].price * ord[i].qty)
+//    }
+//    
+//    return res.json({status: 1, message: ord, amount: amt})
+//});
 
 
 
@@ -1645,7 +1799,15 @@ app.get('/api/static/image', function (req, res) {
     });
 });
 
-
+app.get('/app', function (req, res) {
+    var respon = {status: 0};
+    console.log(req.query);
+    var image = req.query.id;
+    console.log(imgDir+image);
+    res.sendFile(imgDir+'app.apk',{maxAge:'5000'},function(){
+        
+    });
+});
 
 /****************************************************************************
  *

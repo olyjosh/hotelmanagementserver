@@ -11,7 +11,9 @@ a.RM_GOOD = "ok";
 
 a.channel_ONLINE = "online";
 a.channel_Mobile = "mobile";
-a.channel_FRONT = "front";
+a.channel_FRONT = "front";  // SAME AS CASH FOR PAYMENT
+a.channel_POS = "pos"; //ONLY APPLICABLE FOR PAYMENT
+
 
 a.trans_TYPE_HOTEL = "hotel";
 a.trans_TYPE_LANNDRY = "laundry";
@@ -21,6 +23,11 @@ a.trans_TYPE_OTHERS = "other";
 
 a.lan_SERVICE_HOTEL = "hotel";
 a.lan_SERVICE_LAUNDRY = "laundry";
+
+a.ORDER_PENDING = 0;
+a.ORDER_CANCEL = 1; 
+a.ORDER_PREPARING = 2;
+a.ORDER_DONE = 3;
 
 a.USER_SUPER_ADMIN = 0;
 a.USER_ADMIN = 1;

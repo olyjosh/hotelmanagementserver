@@ -14,7 +14,6 @@ var tranSchema = new Schema({
       lastName : String ,
       phone : String,
   },
-  
   performedBy: {type : mongoose.Schema.Types.ObjectId , ref : 'User'},
 },{timestamps: true});
 
