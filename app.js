@@ -1022,7 +1022,6 @@ app.get('/api/op/create/lostfound', function (req, res, next) {
     c.color=q.color;
     c.location=q.location;
     c.roomNo=q.roomNo;
-    c.current=q.current;
     c.founder=q.founder;
     c.comp.name=q.comp_name;
     c.comp.address=q.comp_address;
@@ -1073,13 +1072,15 @@ app.get('/api/op/edit/lostfound', function(req, res, next){
     var c = {};//new Coll();
     var q = req.query;
         
-    c.on=q.on;
+    console.log("THE QUERY S:"+JSON.stringify(q));    
+        
+    c.onDate=q.on;
     c.name=q.name;
     c.color=q.color;
     c.location=q.location;
     c.roomNo=q.roomNo;
-    c.current=q.current;
     c.founder=q.founder;
+    c.comp = {};
     c.comp.name=q.comp_name;
     c.comp.address=q.comp_address;
     c.comp.city=q.comp_city;
@@ -1087,12 +1088,15 @@ app.get('/api/op/edit/lostfound', function(req, res, next){
     c.comp.zip=q.comp_zip;
     c.comp.country=q.comp_country;
     c.comp.phone = q.comp_phone;
+    c.reso = {};
     c.reso.returnBy =q.reso_returnBy;
     c.reso.discardBy=q.reso_discardBy;
     c.reso.returnDate = q.reso_returnDate;
     c.reso.discardDate = q.reso_discardDate;
     c.remark = q.remark;
     c.performedBy = q.performedBy;
+    
+    console.log('We ARE HERE SHA TOOOOOOOOOOO');
     
     Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
         if (err) {
@@ -1247,6 +1251,7 @@ app.get('/api/op/edit/account', function(req, res, next){
     c.accountType=q.accountType;
     c.firstName=q.firstName;
     c.lastName=q.lastName;
+    c.address = {};
     c.address.one=q.address_one;
     c.address.two=q.address_two;
     c.city=q.city;
@@ -1256,6 +1261,7 @@ app.get('/api/op/edit/account', function(req, res, next){
     c.email=q.email;
     c.website=q.website;
     c.rep = q.rep;
+    c.cred={};
     c.cred.accountNo=q.cred_accountNo;
     c.cred.creditLimit=q.cred_creditLimit;
     c.cred.openBalance=q.cred_openBalance;
@@ -1340,7 +1346,7 @@ app.get('/api/op/edit/phone', function(req, res, next){
     c.firstName = q.firstName;
     c.lastName = q.lastName;
     c.gender = q.gender;
-
+    c.contact = {};
     c.contact.mobile = q.contact_mobile;
     c.contact.workPhone = q.contact_workPhone;
     c.contact.residence = q.contact_residence;
