@@ -654,7 +654,7 @@ app.get('/api/op/cancel/book', function(req, res, next){
 /************************************************************
  * Guest list and Guest Messages
  * 
- */
+ *************************************************************/
 app.get('/api/op/fetch/guests', function(req, res, next){
     var Coll = require('./model/guest');
     //isCheckIn : false,
@@ -715,9 +715,43 @@ app.get('/api/op/create/message', function(req, res, next){
   });
 });
 
-/************************************************************
+
+///****************************************************************************
+// *
+// *    Customer info lookups 
+// ********************************************************************
+//
+app.get('/api/op/fetch/customerdetail', function(req, res, next){
+  var q= req.query;
+    var Coll = require('./model/guest');
+    
+//    Coll.find(
+//            {$and:[{checkIn :{$gte:q.d1}},{checkOut:{ $lte: q.d2 }}]}).populate('room')
+    Coll.aggregate([{"$lookup":
+                    {
+                        from: "bookings",
+                        localField: "guest.phone",
+                        foreignField: "phone",
+                        as: "bookings"
+                    }}
+//                ,{"$limit":1}
+            ], function (err, data) {
+
+        Coll.populate(data, {path: 'bookings.room'}, function (err, data) {
+            if (err) {
+                return next(err);
+            }
+            return res.json({status: 1, message: data});
+        });
+    });
+    
+});
+
+
+
+/*************************************************************
  * Laundry
- */
+ *************************************************************/
 
 app.get('/api/op/create/laundryitem', function (req, res, next) {
     var Coll = require('./model/laundryItem');
@@ -1289,7 +1323,7 @@ app.get('/api/op/create/phone', function (req, res, next) {
     var c = new Coll();
     var q = req.query;
 
-    c.ref = q.ref;
+//    c.ref = q.ref;
     c.title = q.title;
     c.firstName = q.firstName;
     c.lastName = q.lastName;
@@ -1298,7 +1332,7 @@ app.get('/api/op/create/phone', function (req, res, next) {
     c.contact.mobile = q.contact_mobile;
     c.contact.workPhone = q.contact_workPhone;
     c.contact.residence = q.contact_residence;
-    c.contact.email = q.contact.email;
+    c.contact.email = q.contact_email;
     c.contact.address = q.contact_address;
     c.contact.city = q.contact_city;
     c.contact.state = q.contact_state;
@@ -1341,7 +1375,7 @@ app.get('/api/op/edit/phone', function(req, res, next){
     var c = {};//new Coll();
     var q = req.query;
         
-    c.ref = q.ref;
+//    c.ref = q.ref;
     c.title = q.title;
     c.firstName = q.firstName;
     c.lastName = q.lastName;
@@ -1350,7 +1384,7 @@ app.get('/api/op/edit/phone', function(req, res, next){
     c.contact.mobile = q.contact_mobile;
     c.contact.workPhone = q.contact_workPhone;
     c.contact.residence = q.contact_residence;
-    c.contact.email = q.contact.email;
+    c.contact.email = q.contact_email;
     c.contact.address = q.contact_address;
     c.contact.city = q.contact_city;
     c.contact.state = q.contact_state;
@@ -1358,10 +1392,10 @@ app.get('/api/op/edit/phone', function(req, res, next){
     c.contact.country = q.contact_country;
     c.remarks = q.remarks;
     c.performedBy = q.performedBy;
-    
-        Coll.findOneAndUpdate({ _id: q.id }, c, function (err, data) {
+
+    Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
         if (err) {
-            
+
             console.log();
 //            return next(err);
             return res.json({status: 0, message: err})
@@ -1535,6 +1569,33 @@ app.get('/api/op/edit/housekeeptask', function(req, res, next){
     });
 });
 
+app.get('/api/op/fetch/aggregsuite', function(req, res, next){
+    var Coll = require('./model/booking');
+    Coll.aggregate(
+            [{"$group":{_id:'$room',books: { $push: "$$ROOT" }}}],function(err,data){
+        res.json({status: 1, message: data});
+    });
+    
+    
+});
+
+app.get('/api/op/fetch/roomstay2', function(req, res, next){
+  var q= req.query;
+    var Coll = require('./model/booking');
+//    Coll.find(
+//            {$and:[{checkIn :{$gte:q.d1}},{checkOut:{ $lte: q.d2 }}]}).populate('room')
+    Coll.aggregate([{"$group":{_id:'$room',books: { $push: "$$ROOT" }}}],function(err,data){
+        
+        Coll.populate(data,{path: 'room $in books'}, function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+    });
+            
+    
+});
 
 
 /**************************************************************************
@@ -1641,10 +1702,10 @@ app.get('/api/op/pay/foodorders', function (req, res, next) {
     var q = req.query;
     var c = {};
     c.amtPaid = q.amtPaid;
-    c._id = q.id
+//    c._id = q.id
     var performedBy = q.performedBy;
     var Coll = require('./model/foodOrder');
-    Coll.findOne({username: oldUsername}, function (err, data) {
+    Coll.findOne({_id: q.id}, function (err, data) {
         data.balance = data.balance - amtPaid;
         data.payment = true;
 
@@ -1689,26 +1750,26 @@ app.get('/api/op/fetch/foodorders', function(req, res, next){
 });
 
 
-app.get('/api/op/pay/foodorders', function (req, res, next) {
-    var q = req.query;
-    var c = {};
-    c.amtPaid = q.amtPaid;
-    c._id = q.id
-    var performedBy = q.performedBy;
-    var Coll = require('./model/foodOrder');
-    Coll.findOne({username: oldUsername}, function (err, data) {
-        data.balance = data.balance - amtPaid;
-        data.payment = true;
-
-//    recordTrans(q.status+ ' ',c.amtPaid,0,0,q.amount,book.guest,q.performedBy);
-        data.save(function (err) {
-            if (err) {
-                return next(err);
-            }
-            return res.json({status: 1, message: data})
-        });
-    });
-});
+//app.get('/api/op/pay/foodorders', function (req, res, next) {
+//    var q = req.query;
+//    var c = {};
+//    c.amtPaid = q.amtPaid;
+//    c._id = q.id
+//    var performedBy = q.performedBy;
+//    var Coll = require('./model/foodOrder');
+//    Coll.findOne({_id: q.id}, function (err, data) {
+//        data.balance = data.balance - amtPaid;
+//        data.payment = true;
+//
+////    recordTrans(q.status+ ' ',c.amtPaid,0,0,q.amount,book.guest,q.performedBy);
+//        data.save(function (err) {
+//            if (err) {
+//                return next(err);
+//            }
+//            return res.json({status: 1, message: data})
+//        });
+//    });
+//});
 
 app.get('/api/op/cancel/foodorders', function (req, res, next) {
     var q = req.query;
@@ -1761,17 +1822,230 @@ app.get('/api/op/done/foodorders', function (req, res, next) {
 });
 
 
-////Entity
-//app.get('/api/op/create/ordersy', function (req, res, next) {
+/**************************************************************************
+ * 
+ * MiniBar Bar 
+ **************************************************************************/
+
+//drink
+app.get('/api/op/create/drink', function (req, res, next) {
+    var Coll = require('./model/drink');
+    var c = new Coll();
+    var q = req.query;
+    c.name = q.name;
+    c.desc = q.desc;
+    c.img = q.img;
+    c.price=q.price;
+    if(q.video!==undefined)c.video=q.video;
+    if(q.article!==undefined)c.article=q.article;
+    c.performedBy = q.performedBy;
+    
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
+    });
+});
+
+app.get('/api/op/fetch/drink', function(req, res, next){
+  var Coll = require('./model/drink');
+  var q = req.query;
+  
+    Coll.find().exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
+
+app.get('/api/op/delete/drink', function(req, res, next){
+    var Coll = require('./model/drink');
+    Coll.find({_id: req.query.id}).remove(function (err) {
+        if (err)
+            throw err
+        respon = {status: 1};
+        res.send(JSON.stringify(respon));
+    })
+});
+
+app.get('/api/op/edit/drink', function(req, res, next){
+    var Coll = require('./model/drink');
+    var c = {};//new Coll();
+    var q = req.query;
+    c.name = q.name;
+    c.desc = q.desc;
+    c.img = q.img;
+    c.price=q.price;
+    if(q.video!==undefined)c.video=q.video;
+    if(q.article!==undefined)c.article=q.article;
+    c.performedBy = q.performedBy;
+    
+    Coll.findOneAndUpdate({ _id: q.id }, c, function (err, data) {
+        if (err) {
+            return res.json({status: 0, message: err})
+        }
+        console.log(data);
+        return res.json({status: 1, message: data});
+    });
+});
+
+//Orders
+app.get('/api/op/create/drinkorders', function (req, res, next) {
+    var Coll = require('./model/drinkOrder');
+    var c = new Coll();
+    var q = req.query;
+    
+    c.channel = q.channel;
+    c.guest.firstName = q.guest_firstName; 
+    c.guest.lastName = q.guest_lastName; 
+    c.guest.phone = q.guest_phone; 
+    // to be calculated
+    var ord = JSON.parse(q.orders);
+    var amt = 0;
+    for (var i = 0; i < ord.length; i++) {
+        amt += (ord[i].price * ord[i].qty)
+    }
+    c.amount = amt;
+    c.balance = amt;
+    c.orders = ord;
+    if(k.channel_FRONT===q.channel){
+        c.performedBy =c.performedBy;
+    }
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
+    });
+});
+
+//
+//app.get('/api/op/pay/drinkorders', function (req, res, next) {
 //    var q = req.query;
-//    var ord = JSON.parse(q.orders);
-//    var amt = 0;
-//    for (var i = 0; i < ord.length; i++) {
-//        amt += (ord[i].price * ord[i].qty)
-//    }
-//    
-//    return res.json({status: 1, message: ord, amount: amt})
+//    var c = {};
+//    c.amtPaid = q.amtPaid;
+//    c._id = q.id
+//    var performedBy = q.performedBy;
+//    var Coll = require('./model/drinkOrder');
+//    Coll.findOne({_id: q.id}, function (err, data) {
+//        data.balance = data.balance - amtPaid;
+//        data.payment = true;
+//
+////    recordTrans(q.status+ ' ',c.amtPaid,0,0,q.amount,book.guest,q.performedBy);
+//        data.save(function (err) {
+//            if (err) {
+//                return next(err);
+//            }
+//            return res.json({status: 1, message: data})
+//        });
+//    });
 //});
+
+app.get('/api/op/fetch/drinkorders', function(req, res, next){
+    
+    var Coll = require('./model/drinkOrder');
+    var q = req.query;
+    var cha = q.channel;
+    var date2;
+    var find;
+    if(q.d2 ===undefined){
+        date2 = new Date();
+    }
+    
+    if(q.d1!==undefined && cha!==undefined){
+//        $and:[{checkIn :{$gte:q.d1}},{checkOut:{ $lte: q.d2 }}]
+        find =Coll.find({$and:[{channel : cha},{createdAt:{$gte :q.d1}},{createdAt:{$lte :q.date2}}]});
+    }else if(cha!==undefined && q.d1 ===undefined){
+        find =Coll.find({channel : cha});
+    }else if(cha===undefined && q.d1 !==undefined){
+        find =Coll.find({$and : [{createdAt:{$gte :q.d1}},{createdAt:{$lte :q.date2}}]});
+    }else{
+        find =Coll.find();
+    }
+  
+    find.populate('orders.food','name -_id').exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
+
+
+app.get('/api/op/pay/drinkorders', function (req, res, next) {
+    var q = req.query;
+    var c = {};
+    c.amtPaid = q.amtPaid;
+//    c._id = q.id
+    var performedBy = q.performedBy;
+    var Coll = require('./model/drinkOrder');
+    Coll.findOne({_id: q.id}, function (err, data) {
+        data.balance = data.balance - amtPaid;
+        data.payment = true;
+
+//    recordTrans(q.status+ ' ',c.amtPaid,0,0,q.amount,book.guest,q.performedBy);
+        data.save(function (err) {
+            if (err) {
+                return next(err);
+            }
+            return res.json({status: 1, message: data})
+        });
+    });
+});
+
+app.get('/api/op/cancel/drinkorders', function (req, res, next) {
+    var q = req.query;
+    var Coll = require('./model/drinkOrder');
+    Coll.findOne({_id: q.id}, function (err, data) {
+        if (data.status === k.ORDER_DONE || data.status ===  k.ORDER_PREPARING) {
+            return res.json({status: 0, message: 'Order can no longer be cancel as food is in preparation or done'});
+        } else {
+            data.status = k.ORDER_CANCEL;
+            if (q.channel == k.channel_FRONT) {
+                data.cancelBy = q.performedBy;
+            }
+            data.save(function (err) {
+                if (err) {
+                    return next(err);
+                }
+                return res.json({status: 1, message: data});
+            });
+        }
+
+    });
+});
+
+app.get('/api/op/approve/drinkorders', function (req, res, next) {
+    var q = req.query;
+    var Coll = require('./model/drinkOrder');
+    Coll.findOne({_id: q.id}, function (err, data) {
+        data.status = k.ORDER_PREPARING;
+        data.save(function (err) {
+            if (err) {
+                return next(err);
+            }
+            return res.json({status: 1, message: data});
+        });
+    });
+});
+
+app.get('/api/op/done/drinkorders', function (req, res, next) {
+    var q = req.query;
+    var Coll = require('./model/drinkOrder');
+    Coll.findOne({_id: q.id}, function (err, data) {
+        data.status = k.ORDER_DONE;
+        data.save(function (err) {
+            if (err) {
+                return next(err);
+            }
+            return res.json({status: 1, message: data});
+        });
+    });
+});
+
+
 
 
 

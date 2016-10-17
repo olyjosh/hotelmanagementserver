@@ -2,7 +2,6 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var sch = new Schema({
-    ref: {type : mongoose.Schema.Types.ObjectId , ref : 'User'},
     title : String,
     firstName: String,
     lastName: String,

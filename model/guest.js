@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');
+require('./booking');
 var Schema = mongoose.Schema;
 
 var UserSchema = new Schema({

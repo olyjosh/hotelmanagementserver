@@ -1,12 +1,15 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-var drinkSchema = new Schema({
+var MealSchema = new Schema({
     name : String,
-    alcohol : Number,
+    desc : String,
     img : String,
-    article : { link: String, type : String /* can be website or just text*/ }
+    price : Number,
+    alcohol : Number,
+    video : String, /* This is the link to the preparations video if any */
+    article : String, /* can be website link*/ 
 },{timestamps: true});
 
-var mod = mongoose.model('Drink', drinkSchema);
+var mod = mongoose.model('Drink', MealSchema);
 module.exports = mod;
