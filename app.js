@@ -485,15 +485,19 @@ app.get('/api/op/create/book', function(req, res, next){
     book.guest.firstName = q.firstName;
     book.guest.lastName = q.lastName;
     book.guest.phone = q.phone;
-    recordTrans(q.status+ ' ',q.amount,0,0,q.amount,book.guest,q.performedBy);
+//    recordTrans(q.status+ ' ',q.amount,0,0,q.amount,book.guest,q.performedBy);
 //    (desc,amount,discount,tax,total,paid,guest,performedBy)
-
-    createGuest (q);
+    var retu;
+    createGuest (q,retu );
     changeRoomBookStatus(q.room, q.status,function(data){});
-    
+              console.log(retu);
+              
+//    var folio = {amount : -1*q.amount, guestId : retu._id, guest : retu, performedBy : q.performedBy};
+//    recordFolio(folio,retu);
+//            
     book.save(function (err, data) {
         if (err) { 
-        return next(err); 
+        //sreturn next(err); 
     }
     return res.json({status:1, message : data});
   });
@@ -537,9 +541,6 @@ recordTrans = function (desc,amount,discount,tax,total,paid,guest,performedBy){
         }
         return res.json({status: 1, message: data})
     });
-    
-    
-    
 }
 
 
@@ -566,8 +567,8 @@ changeRoomBookStatus= function(id,status,callback){
     // This update will return updated data
     Fac.findByIdAndUpdate(id, {"roomStatus.bookedStatus": status}, function (err, data) {
         if (err) {
-            return next(err);
-            //console.log();
+//            return next(err);
+            console.log(err);
         }
         
         return callback(data);
@@ -575,7 +576,7 @@ changeRoomBookStatus= function(id,status,callback){
 }
 
 
-var createGuest = function (q) {
+var createGuest = function (q, guest) {
         
     var Guest = require('./model/guest');
     var gue = new Guest();
@@ -591,16 +592,68 @@ var createGuest = function (q) {
 //        }
 //    });
 //    var ret;
-    return Guest.findOneAndUpdate({ phone: q.phone }, gue.toObject(), { upsert : true }, function (err, data) {
+    Guest.findOneAndUpdate({ phone: q.phone }, gue.toObject(), { upsert : true }, function (err, data) {
         if (err) {
 //            return next(err);
             console.log();
         }
         console.log(data);
-        return data;
+        guest= data;
     });
 //    return ret;
 }
+
+recordFolio = function (q, returnData) {
+        
+    var Coll = require('./model/folio');
+    
+    
+     Coll.findOne({_id: q.id}, function (err, data) {
+         
+        if (data === undefined) {
+            var data = new Coll();
+            data.balance = q.amount;
+            data.balance = q.balance;
+            data.guestId = q.guestId;
+            data.guest = q.guest;
+            data.performedBy = q.performedBy;
+            data.save({upsert: true}, function (err, data) {
+                if (err) {
+                    return next(err);
+                }
+                
+            });
+        } else {
+            data.balance += q.amount;
+            data.save(function (err) {
+                if (err) {
+                    return next(err);
+                }
+            });
+        }
+        returnData = data;
+    });
+    
+//    c.save({ upsert : true },function (err, data) {
+//        if (err) {
+//            return next(err);
+//        }
+//    });
+//    var ret;
+//    c.findOneAndUpdate({ phone: q.phone }, c.toObject(), { upsert : true }, function (err, data) {
+//        if (err) {
+////            return next(err);
+//            console.log();
+//        }
+//        console.log(data);
+//        return data;
+//    });
+
+
+}
+
+
+
 
 app.get('/api/op/fetch/book', function(req, res, next){
     var Coll = require('./model/booking');
@@ -2046,7 +2099,10 @@ app.get('/api/op/done/drinkorders', function (req, res, next) {
 });
 
 
-
+//app.get('/api/op/create/folio', function (req, res, next) {
+//    var q = req.query;
+//    recordFolio(res, q);
+//});
 
 
 /****************************************************************************
