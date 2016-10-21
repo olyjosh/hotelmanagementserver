@@ -13,6 +13,7 @@ a.channel_ONLINE = "online";
 a.channel_Mobile = "mobile";
 a.channel_FRONT = "front";  // SAME AS CASH FOR PAYMENT
 a.channel_POS = "pos"; //ONLY APPLICABLE FOR PAYMENT
+a.channel_BANK_TRANSFER = "bank"; //ONLY APPLICABLE FOR PAYMENT
 
 
 a.trans_TYPE_HOTEL = "hotel";

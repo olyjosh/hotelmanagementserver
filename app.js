@@ -464,10 +464,6 @@ app.get('/api/op/create/book', function(req, res, next){
     var q = req.query;
     book.status = q.status;
     book.room = q.room;
-//    var customer = q.customer;
-//    if (customer != null) {
-//        book.customer = customer;
-//    }
     book.channel = q.channel; /* any of online, web, frontDesk*/
     book.performedBy = q.performedBy;
     book.amount = q.amount;
@@ -487,14 +483,16 @@ app.get('/api/op/create/book', function(req, res, next){
     book.guest.phone = q.phone;
 //    recordTrans(q.status+ ' ',q.amount,0,0,q.amount,book.guest,q.performedBy);
 //    (desc,amount,discount,tax,total,paid,guest,performedBy)
-    var retu;
-    createGuest (q,retu );
+    createGuest (q,function (data){
+        var folio = {amount : -1*q.amount, guestId : data._id, guest : data, performedBy : q.performedBy};
+        recordFolio(folio,function(data){
+            
+        });
+        
+    });
+    
     changeRoomBookStatus(q.room, q.status,function(data){});
-              console.log(retu);
-              
-//    var folio = {amount : -1*q.amount, guestId : retu._id, guest : retu, performedBy : q.performedBy};
-//    recordFolio(folio,retu);
-//            
+ 
     book.save(function (err, data) {
         if (err) { 
         //sreturn next(err); 
@@ -576,10 +574,12 @@ changeRoomBookStatus= function(id,status,callback){
 }
 
 
-var createGuest = function (q, guest) {
+var createGuest = function (q, callback) {
         
     var Guest = require('./model/guest');
-    var gue = new Guest();
+//    var gue = new Guest();
+    gue = {};
+    gue.name = {};
     gue.name.lastName = q.lastName;
     gue.name.firstName = q.firstName;
     gue.email = q.email;
@@ -592,28 +592,28 @@ var createGuest = function (q, guest) {
 //        }
 //    });
 //    var ret;
-    Guest.findOneAndUpdate({ phone: q.phone }, gue.toObject(), { upsert : true }, function (err, data) {
+    Guest.findOneAndUpdate({ phone: q.phone }, gue, { upsert : true, new: true }, function (err, data) {
         if (err) {
 //            return next(err);
-            console.log();
+            console.log(err);
         }
         console.log(data);
-        guest= data;
+        return callback(data);
     });
 //    return ret;
 }
 
-recordFolio = function (q, returnData) {
+recordFolio = function (q, callback) {
         
     var Coll = require('./model/folio');
     
-    
-     Coll.findOne({_id: q.id}, function (err, data) {
-         
-        if (data === undefined) {
+    console.log("THE PHONE NUMBER IN QST ::::::::::"+q.guest.phone);
+    Coll.findOne({"guest.phone": q.guest.phone}, function (err, data) {
+//    Coll.findOne({_id: q.id}, function (err, data) {
+                  
+        if (data === null || data=== undefined) {
             var data = new Coll();
             data.balance = q.amount;
-            data.balance = q.balance;
             data.guestId = q.guestId;
             data.guest = q.guest;
             data.performedBy = q.performedBy;
@@ -625,13 +625,13 @@ recordFolio = function (q, returnData) {
             });
         } else {
             data.balance += q.amount;
-            data.save(function (err) {
+            data.save({upsert: true},function (err) {
                 if (err) {
                     return next(err);
                 }
             });
         }
-        returnData = data;
+        callback (data);
     });
     
 //    c.save({ upsert : true },function (err, data) {
@@ -662,8 +662,7 @@ app.get('/api/op/fetch/book', function(req, res, next){
             return next(err);
         }
         return res.json({status:1, message : data});
-//        respon = {status: 1, posts: posts};
-//        res.send(JSON.stringify(respon));
+
     });
 });
 
@@ -1496,7 +1495,7 @@ app.get('/api/op/fetch/workorder', function(req, res, next){
 });
 
 
-app.get('/api/op/delete/phone', function(req, res, next){
+app.get('/api/op/delete/workorder', function(req, res, next){
     var Coll = require('./model/workOrder');
     Coll.find({_id: req.query.id}).remove(function (err) {
         if (err)
@@ -1506,7 +1505,7 @@ app.get('/api/op/delete/phone', function(req, res, next){
     })
 });
 
-app.get('/api/op/edit/phone', function(req, res, next){
+app.get('/api/op/edit/workorder', function(req, res, next){
     var Coll = require('./model/workOrder');
     var c = {}; //new Coll();
     var q = req.query;
@@ -1535,6 +1534,164 @@ app.get('/api/op/edit/phone', function(req, res, next){
     });
 });
 
+
+// Payout
+app.get('/api/op/create/payout', function (req, res, next) {
+    var Coll = require('./model/payOut');
+    var c = new Coll();
+    var q = req.query;
+
+
+
+    c.voucherNo = q.voucherNo;
+    c.paidTo = q.paidTo;
+    c.category = q.category;
+    c.extraCharge = q.extraCharge;
+    c.roomNO = q.roomNO;
+    c.amount = q.amount;
+    c.discount = q.discount;
+    c.tax = q.tax;
+    c.qty = q.qty;
+    c.adjustment = q.adjustment;
+    c.amountPaid = q.amountPaid;
+    c.total = q.total;    
+    c.remarks = q.remarks;
+    c.performedBy = q.performedBy;
+    
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
+    });
+});
+
+app.get('/api/op/fetch/payout', function(req, res, next){
+  var Coll = require('./model/payOut');
+    Coll.find().exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
+
+
+app.get('/api/op/delete/payout', function(req, res, next){
+    var Coll = require('./model/payOut');
+    Coll.find({_id: req.query.id}).remove(function (err) {
+        if (err)
+            throw err
+        respon = {status: 1};
+        res.send(JSON.stringify(respon));
+    })
+});
+
+app.get('/api/op/edit/payout', function(req, res, next){
+    var Coll = require('./model/payOut');
+    var c = {}; //new Coll();
+    var q = req.query;
+        
+    c.voucherNo = q.voucherNo;
+    c.paidTo = q.paidTo;
+    c.category = q.category;
+    c.extraCharge = q.extraCharge;
+    c.roomNO = q.roomNO;
+    c.amount = q.amount;
+    c.discount = q.discount;
+    c.tax = q.tax;
+    c.qty = q.qty;
+    c.adjustment = q.adjustment;
+    c.amountPaid = q.amountPaid;
+    c.total = q.total;    
+    c.remarks = q.remarks;
+    c.performedBy = q.performedBy;
+
+    Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
+        if (err) {
+
+            console.log();
+//            return next(err);
+            return res.json({status: 0, message: err})
+        }
+        console.log(data);
+        return res.json({status: 1, message: data});
+    });
+});
+
+
+// BusinessSources
+app.get('/api/op/create/bizsource', function (req, res, next) {
+    var Coll = require('./model/businessSource');
+    var c = new Coll();
+    var q = req.query;
+
+    c.alias = q.alias;
+    c.compName = q.compName;
+    c.contPerson = q.contPerson;
+    c.city = q.city;
+    c.phone = q.phone;
+    c.email = q.email;
+    c.plan = q.plan;
+    c.planValue = q.planValue;
+    c.performedBy = q.performedBy;
+    
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
+    });
+});
+
+app.get('/api/op/fetch/bizsource', function(req, res, next){
+  var Coll = require('./model/businessSource');
+    Coll.find().exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
+
+
+app.get('/api/op/delete/bizsource', function(req, res, next){
+    var Coll = require('./model/businessSource');
+    Coll.find({_id: req.query.id}).remove(function (err) {
+        if (err)
+            throw err
+        respon = {status: 1};
+        res.send(JSON.stringify(respon));
+    })
+});
+
+app.get('/api/op/edit/bizsource', function(req, res, next){
+    var Coll = require('./model/businessSource');
+    var c = {}; //new Coll();
+    var q = req.query;
+        
+    c.alias = q.alias;
+    c.compName = q.compName;
+    c.contPerson = q.contPerson;
+    c.city = q.city;
+    c.phone = q.phone;
+    c.email = q.email;
+    c.plan = q.plan;
+    c.planValue = q.planValue;
+    c.performedBy = q.performedBy;
+    c.performedBy = q.performedBy;
+
+    Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
+        if (err) {
+
+            console.log();
+//            return next(err);
+            return res.json({status: 0, message: err})
+        }
+        console.log(data);
+        return res.json({status: 1, message: data});
+    });
+});
 
 
 
@@ -2098,6 +2255,30 @@ app.get('/api/op/done/drinkorders', function (req, res, next) {
     });
 });
 
+
+
+
+/****************************************************************************
+ *
+ *    Folio, legder, And other accounting
+ ***************************************************************************/
+app.get('/api/op/fetch/folio', function(req, res, next){
+  var Coll = require('./model/folio');
+  var q = req.query;
+  var query = {}
+  
+  if(q.d1!==undefined){
+      if(q.d2===undefined)q.d2 = new Date();
+      query = {$and:[ {createdAt:{$gte :q.d1}},{createdAt:{$lte :q.d2}} ]};
+  }
+  
+    Coll.find(query).exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
 
 //app.get('/api/op/create/folio', function (req, res, next) {
 //    var q = req.query;
