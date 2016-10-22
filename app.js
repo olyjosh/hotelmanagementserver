@@ -782,8 +782,8 @@ app.get('/api/op/fetch/customerdetail', function(req, res, next){
     Coll.aggregate([{"$lookup":
                     {
                         from: "bookings",
-                        localField: "guest.phone",
-                        foreignField: "phone",
+                        localField: "phone",
+                        foreignField: "guest.phone",
                         as: "bookings"
                     }}
 //                ,{"$limit":1}

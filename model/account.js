@@ -20,12 +20,12 @@ var sch = new Schema({
     rep :  {type : mongoose.Schema.Types.ObjectId , ref : 'User'},
     cred : {
         accountNo : String,
-        creditLimit : String,
-        openBalance : String,
+        creditLimit : Number,
+        openBalance : Number,
         paymentTerm : String
     },
     performedBy : {type : mongoose.Schema.Types.ObjectId , ref : 'User'}
 },{timestamps: true});
 
-var mod = mongoose.model('Reminder', sch);
+var mod = mongoose.model('Account', sch);
 module.exports = mod;
