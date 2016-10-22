@@ -1353,10 +1353,7 @@ app.get('/api/op/edit/account', function(req, res, next){
     c.cred.openBalance=q.cred_openBalance;
     c.cred.paymentTerm=q.cred_paymentTerm;
     c.performedBy = q.performedBy;
-    
-    var reci = q.receivers.split(',');
-    c.receivers=reci;
-
+  
     Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
         if (err) {
 
