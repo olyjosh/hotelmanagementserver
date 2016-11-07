@@ -504,8 +504,56 @@ app.get('/api/op/create/book', function(req, res, next){
 
 /*******************************************************************************
  *  Some cool functions going down here.
- *  Transaction recording, folios bla bla 
+ *  Transaction recording, folios bla bla  payment
  ******************************************************************************/
+app.post('/api/op/create/payment', function(req, res, next){
+    pay(req, res, next);
+});
+
+
+
+pay = function(req, res, next){
+    var q = req.body;
+
+    console.log("The query :"+JSON.stringify(q))
+    var Coll = require('./model/payment');
+    var c = new Coll();
+    c.amount = q.amount;
+    c.dept = q.dept;
+    c.desc = q.desc;
+    c.channel = q.channel;
+
+    if (q.channel !== k.channel_FRONT){
+        c.refNo = q.refNo;
+    }
+    c.payFor = q.payFor;
+    if (q.payFor !== k.payment_CLEAR_BILL){
+        c.orderId = q.orderId;
+    }
+    
+    if (q.guestId !== null && q.guestId !== undefined) {
+        c.guestId = q.guestId;
+        if (q.guest !== null && q.guest !== undefined) {
+            c.guest = JSON.parse(q.guest);
+        }
+    }
+
+    c.performedBy = q.performedBy;
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        
+        if (q.guestId !== null && q.guestId !== undefined) {
+            var folio = {amount : q.amount, guestId : q.guestId, guest : c.guest, performedBy : q.performedBy};
+            recordFolio(folio,function(data){});
+        }
+        return res.json({status: 1, message: data});
+    });
+
+    
+}
+
 
 recordTrans = function (desc,amount,discount,tax,total,paid,guest,performedBy){
 //  desc: String,
@@ -607,7 +655,6 @@ recordFolio = function (q, callback) {
         
     var Coll = require('./model/folio');
     
-    console.log("THE PHONE NUMBER IN QST ::::::::::"+q.guest.phone);
     Coll.findOne({"guest.phone": q.guest.phone}, function (err, data) {
 //    Coll.findOne({_id: q.id}, function (err, data) {
                   
@@ -624,7 +671,8 @@ recordFolio = function (q, callback) {
                 
             });
         } else {
-            data.balance += q.amount;
+
+            data.balance += JSON.parse(q.amount);
             data.save({upsert: true},function (err) {
                 if (err) {
                     return next(err);
@@ -633,24 +681,51 @@ recordFolio = function (q, callback) {
         }
         callback (data);
     });
-    
-//    c.save({ upsert : true },function (err, data) {
-//        if (err) {
-//            return next(err);
-//        }
-//    });
-//    var ret;
-//    c.findOneAndUpdate({ phone: q.phone }, c.toObject(), { upsert : true }, function (err, data) {
-//        if (err) {
-////            return next(err);
-//            console.log();
-//        }
-//        console.log(data);
-//        return data;
-//    });
-
 
 }
+
+
+/*******************************************************************************
+ *  Report and Night Audits
+ *  Transaction recording, folios bla bla  payment
+ ******************************************************************************/
+app.get('/api/op/fetch/night', function(req, res, next){
+    var Coll = require('./model/payment');
+    
+    Coll.aggregate(
+            [{"$group":
+                    {
+                        _id: "$dept",
+                        dept_total : {$sum : "$amount"},
+                        count : {$sum :1}
+                
+            }
+        }],function(err,data){
+        res.json({status: 1, message: {depts :data}});
+    });
+});
+
+
+var summary = {};
+app.get('/api/op/fetch/summary', function(req, res, next){
+    var Coll = require('./model/booking');
+    
+    Coll.aggregate(
+            [
+        {$match: {$or : [{isCheckIn :false},{isCheckIn :undefined} ]}}
+        ,{"$group":
+                    {
+                        _id: { status : "$status"},
+//                        dept_total : {$sum : "$amount"},
+                        count : {$sum :1}
+                
+            }
+        }],function(err,data){
+        
+        res.json({status: 1, message: {depts :data}});
+    });
+});
+
 
 
 
@@ -786,10 +861,9 @@ app.get('/api/op/fetch/customerdetail', function(req, res, next){
                         foreignField: "guest.phone",
                         as: "bookings"
                     }}
-//                ,{"$limit":1}
             ], function (err, data) {
 
-        Coll.populate(data, {path: 'bookings.room'}, function (err, data) {
+        Coll.populate(data, {"path": 'bookings.room'}, function (err, data) {
             if (err) {
                 return next(err);
             }
@@ -2269,7 +2343,27 @@ app.get('/api/op/fetch/folio', function(req, res, next){
       query = {$and:[ {createdAt:{$gte :q.d1}},{createdAt:{$lte :q.d2}} ]};
   }
   
-    Coll.find(query).exec( function (err, data) {
+    Coll.find(query).sort({ updatedAt : -1}).exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
+
+app.get('/api/op/fetch/foliodetail', function(req, res, next){
+  var Coll = require('./model/payment');
+  var q = req.query;
+  var query = {guestId : q.id};
+  
+  if(q.d1!==undefined){
+      if(q.d2===undefined)q.d2 = new Date();
+      query = {guestId : q.id ,$and:[ {createdAt:{$gte :q.d1}},{createdAt:{$lte :q.d2}} ]};
+  }
+  
+    Coll.find(query).select('-__v -dept -refNo -guest -guestId')
+//            .sort({ updatedAt : -1})
+        .populate('performedBy','name').exec( function (err, data) {
         if (err) {
             return next(err);
         }

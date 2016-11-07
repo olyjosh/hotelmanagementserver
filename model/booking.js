@@ -1,11 +1,11 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
-require('./facility');;
+require('./facility'); // this the same as room model
 
 var bookingSchema = new Schema({
   status: String,// Can be reserved, booked,dueout,vacant,
   room : {type : mongoose.Schema.Types.ObjectId , ref : 'Facility'},
-  channel : String /* any of online, web, frontDesk*/,
+  channel : String /* any of mobile,online, web, frontDesk*/,
   performedBy : {type : mongoose.Schema.Types.ObjectId , ref : 'User'},
 //  customer : {type : mongoose.Schema.Types.ObjectId , ref : 'User'}, // Useful for a sign up customers
   guest : {

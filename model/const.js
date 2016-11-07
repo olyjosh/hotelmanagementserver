@@ -15,6 +15,12 @@ a.channel_FRONT = "front";  // SAME AS CASH FOR PAYMENT
 a.channel_POS = "pos"; //ONLY APPLICABLE FOR PAYMENT
 a.channel_BANK_TRANSFER = "bank"; //ONLY APPLICABLE FOR PAYMENT
 
+a.payment_BOOK = 0;
+a.payment_LAUNDRY = 1;
+a.payment_FOOD = 2;
+a.payment_DRINK = 3;
+a.payment_MISC_SALES = 4;
+a.payment_CLEAR_BILL = 5;
 
 a.trans_TYPE_HOTEL = "hotel";
 a.trans_TYPE_LANNDRY = "laundry";
@@ -42,6 +48,12 @@ a.USER_MAINTENANCE = 8;
 a.USER_MAID = 9;
 a.USER_BARTENDER = 10;
 
+
+a.DEPT_FRONT = 0;
+a.DEPT_RESTAURANT = 1;
+a.DEPT_BAR = 2;
+a.DEPT_LAUNDRY = 3;
+a.DEPT_OTHER = 4;
 
 module.exports = a;
 
