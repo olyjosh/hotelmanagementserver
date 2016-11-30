@@ -156,7 +156,9 @@ app.post('/api/login', function(req, res, next){
       login(user._id, true);
       return res.json({status:1 ,token: user.generateJWT(), user : user});
     } else {
+        
       return res.status(401).json(info);
+      
     }
   })(req, res, next);
 });
@@ -2375,6 +2377,274 @@ app.get('/api/op/fetch/foliodetail', function(req, res, next){
 //    var q = req.query;
 //    recordFolio(res, q);
 //});
+
+
+/**************************************************************************
+ * 
+ * Payroll
+ **************************************************************************/
+
+//payhead
+app.get('/api/op/create/payhead', function (req, res, next) {
+    var Coll = require('./model/payhead');
+    var c = new Coll();
+    var q = req.query;
+
+    c.payName = q.payName;
+    c.payDesc = q.payDesc;
+    c.payType = q.payType;
+    c.performedBy = q.performedBy;
+    
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
+    });
+});
+
+app.get('/api/op/fetch/payhead', function(req, res, next){
+  var Coll = require('./model/payhead');
+    Coll.find().exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
+
+
+app.get('/api/op/delete/payhead', function(req, res, next){
+    var Coll = require('./model/payhead');
+    Coll.find({_id: req.query.id}).remove(function (err) {
+        if (err)
+            throw err
+        respon = {status: 1};
+        res.send(JSON.stringify(respon));
+    })
+    
+});
+
+app.get('/api/op/edit/payhead', function(req, res, next){
+    var Coll = require('./model/payhead');
+    var c = {};//new Coll();
+    var q = req.query;
+        
+
+    c.payName = q.payName;
+    c.payDesc = q.payDesc;
+    c.payType = q.payType;
+        
+    Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
+        if (err) {
+
+            console.log();
+//            return next(err);
+            return res.json({status: 0, message: err})
+        }
+        console.log(data);
+        return res.json({status: 1, message: data});
+    });
+});
+
+
+//StaffSalary
+app.get('/api/op/create/staffsalary', function (req, res, next) {
+    var Coll = require('./model/staffSalary');
+    var c = new Coll();
+    var q = req.query;
+
+    c.staffDept = q.staffDept;
+    c.staffName = q.staffName;
+    c.month = q.month;
+    c.date= q.date;
+    c.performedBy = q.performedBy;
+    
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
+    });
+});
+
+app.get('/api/op/fetch/staffsalary', function(req, res, next){
+  var Coll = require('./model/staffSalary');
+    Coll.find().exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
+
+
+app.get('/api/op/delete/staffsalary', function(req, res, next){
+    var Coll = require('./model/staffSalary');
+    Coll.find({_id: req.query.id}).remove(function (err) {
+        if (err)
+            throw err
+        respon = {status: 1};
+        res.send(JSON.stringify(respon));
+    })
+    
+});
+
+app.get('/api/op/edit/staffsalary', function(req, res, next){
+    var Coll = require('./model/staffSalary');
+    var c = {};//new Coll();
+    var q = req.query;
+        
+
+    c.staffDept = q.staffDept;
+    c.staffName = q.staffName;
+    c.month = q.month;
+    c.date= q.date;
+        
+    Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
+        if (err) {
+
+            console.log();
+//            return next(err);
+            return res.json({status: 0, message: err})
+        }
+        console.log(data);
+        return res.json({status: 1, message: data});
+    });
+});
+
+//PayFreq
+app.get('/api/op/create/payfreq', function (req, res, next) {
+    var Coll = require('./model/payfreq');
+    var c = new Coll();
+    var q = req.query;
+
+    c.freq = q.freq;
+    c.performedBy = q.performedBy;
+    
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
+    });
+});
+
+app.get('/api/op/fetch/payfreq', function(req, res, next){
+  var Coll = require('./model/staffSalary');
+    Coll.find().exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
+
+
+app.get('/api/op/delete/payfreq', function(req, res, next){
+    var Coll = require('./model/staffSalary');
+    Coll.find({_id: req.query.id}).remove(function (err) {
+        if (err)
+            throw err
+        respon = {status: 1};
+        res.send(JSON.stringify(respon));
+    })
+    
+});
+
+app.get('/api/op/edit/payfreq', function(req, res, next){
+    var Coll = require('./model/staffSalary');
+    var c = {};//new Coll();
+    var q = req.query;
+
+    c.freq = q.freq;
+
+    Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
+        if (err) {
+
+            console.log();
+//            return next(err);
+            return res.json({status: 0, message: err})
+        }
+        console.log(data);
+        return res.json({status: 1, message: data});
+    });
+});
+
+
+
+//salary
+app.get('/api/op/create/salary', function (req, res, next) {
+    var Coll = require('./model/salary');
+    var c = new Coll();
+    var q = req.query;
+
+    c.dept = q.dept;
+    c.staffName = q.staffName;
+    c.payHead = q.payHead;
+    c.unit = q.unit;
+    c.type = q.type;
+        
+    c.performedBy = q.performedBy;
+    
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
+    });
+});
+
+app.get('/api/op/fetch/salary', function(req, res, next){
+  var Coll = require('./model/salary');
+    Coll.find().exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
+
+
+app.get('/api/op/delete/salary', function(req, res, next){
+    var Coll = require('./model/salary');
+    Coll.find({_id: req.query.id}).remove(function (err) {
+        if (err)
+            throw err
+        respon = {status: 1};
+        res.send(JSON.stringify(respon));
+    })
+    
+});
+
+app.get('/api/op/edit/salary', function(req, res, next){
+    var Coll = require('./model/salary');
+    var c = {};//new Coll();
+    var q = req.query;
+
+    c.dept = q.dept;
+    c.staffName = q.staffName;
+    c.payHead = q.payHead;
+    c.unit = q.unit;
+    c.type = q.type;
+
+    Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
+        if (err) {
+
+            console.log();
+//            return next(err);
+            return res.json({status: 0, message: err})
+        }
+        console.log(data);
+        return res.json({status: 1, message: data});
+    });
+});
+
+
+
+
+
+
 
 
 /****************************************************************************
