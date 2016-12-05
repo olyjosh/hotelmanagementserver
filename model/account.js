@@ -16,8 +16,9 @@ var sch = new Schema({
     state : String,
     country : String,
     email : String,
+    phone : String,
     website : String,
-    rep :  {type : mongoose.Schema.Types.ObjectId , ref : 'User'},
+    rep :  String,//{type : mongoose.Schema.Types.ObjectId , ref : 'User'},
     cred : {
         accountNo : String,
         creditLimit : Number,

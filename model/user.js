@@ -3,6 +3,8 @@ var jwt = require('jsonwebtoken');
 
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
+var autoIncrement = require('mongoose-auto-increment');
+
 
 var UserSchema = new Schema({
     name: {
@@ -15,8 +17,9 @@ var UserSchema = new Schema({
     phone: {type: String,required: [true, 'phone is required'], unique:[ true, 'phone already exist']},
     staff : {
         isStaff : Boolean, 
-        staffId : String,
-        privilege : String
+        staffId : Number,
+        privilege : String,
+//        depart : String,
     },
     sex : String,
     dob : Date,
@@ -44,8 +47,10 @@ UserSchema.methods.generateJWT = function() {
     email: this.email,
     name: this.name,
     exp: parseInt(expiry.getTime() / 1000),
-  }, "MY_SECRET"); // DO NOT KEEP YOUR SECRET IN THE CODE!
+  }, "JOSH_SECRET"); // DO NOT KEEP YOUR SECRET IN THE CODE!
 };
 
+
+UserSchema.plugin(autoIncrement.plugin, { model: 'User', field: 'staffId' });
 var User = mongoose.model('User', UserSchema);
 module.exports = User;

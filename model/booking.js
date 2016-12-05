@@ -1,6 +1,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 require('./facility'); // this the same as room model
+require('./guest');
 
 var bookingSchema = new Schema({
   status: String,// Can be reserved, booked,dueout,vacant,
@@ -8,11 +9,11 @@ var bookingSchema = new Schema({
   channel : String /* any of mobile,online, web, frontDesk*/,
   performedBy : {type : mongoose.Schema.Types.ObjectId , ref : 'User'},
 //  customer : {type : mongoose.Schema.Types.ObjectId , ref : 'User'}, // Useful for a sign up customers
+  guestObject : {type : mongoose.Schema.Types.ObjectId , ref : 'Guest'},
   guest : {
       firstName : String,
       lastName : String ,
       phone : String,
-      
   }, // Now I'm using phone number as unique id
   checkIn : Date,
   checkOut : Date,
@@ -31,5 +32,7 @@ var bookingSchema = new Schema({
   }
 },{timestamps: true});
 
+
+bookingSchema.plugin(autoIncrement.plugin,'Booking');
 var mod = mongoose.model('Booking', bookingSchema);
 module.exports = mod;

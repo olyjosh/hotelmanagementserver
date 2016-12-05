@@ -29,7 +29,6 @@ global.appRoot = path.resolve(__dirname);
 var imgDir = global.appRoot+'/res/images/upload/';
 var k = require('./model/const');  // some useful constants
 
-
 var m = config.mongo;
 
 mongoose.connect(m.uri, {
@@ -39,6 +38,50 @@ mongoose.connect(m.uri, {
   user: m.user,
   pass: m.pass
 });
+
+//var email   = require("./path/to/emailjs/email");
+var email   = require('emailjs');
+
+var server  = email.server.connect({
+   user:    config.mail.user, 
+   password:config.mail.pass, 
+   host:    config.mail.server, 
+   tls: {ciphers: "SSLv3"}
+});
+
+
+function sendMail(subject, text, to, cc) {
+    var message = {
+        text: text,
+        from:  "<"+config.mail.user+">",//"<softprogcode@outlook.com>",
+        to: "<"+to+">",
+        subject: subject
+//   ,
+//   attachment: 
+//   [
+//      {data: "<html>i <i>hope</i> this works! here is an image: <img src='cid:my-image' width='100' height ='50'> </html>"},
+//      {path:"path/to/file.zip", type:"application/zip", name:"renamed.zip"},
+//      {path:"path/to/image.jpg", type:"image/jpg", headers:{"Content-ID":"<my-image>"}}
+//   ]
+    };
+    server.send(message, function (err, message) {
+        console.log(err || message);
+    });
+}
+
+function sendSMS(sender, msg, phone){
+    
+}
+
+function random()
+{
+    var text = "";
+    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    for( var i=0; i < 5; i++ )
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    return text;
+}
+
 
 var User = require('./model/user');
 
@@ -82,7 +125,7 @@ app.use('/doc',doc);
 var verifyAuth = function (req, res, next) {
     if (req.url.startsWith("/api/op/")) {
         var token = req.headers.token; 
-        jwt.verify(token, 'MY_SECRET'  //    app.get('MY_SECRET')
+        jwt.verify(token, 'JOSH_SECRET'  //    app.get('MY_SECRET')
                 , function (err, decoded) {
                     if (err) {
                         res.status(401);
@@ -105,9 +148,9 @@ app.use(verifyAuth); // Using the inteception created above
  *  Create user(staff registeration), login  authentication
  *
  ******************************************************************************/
-
 app.post('/api/register', function(req, res, next){
-  if(!req.body.username || !req.body.password){
+  if(!req.body.username || !req.body.email || !req.body.phone){
+      
     return res.status(400).json({status:0 ,message: 'Please fill out all fields'});
   }
   
@@ -120,30 +163,39 @@ app.post('/api/register', function(req, res, next){
   user.email = req.body.email;
   user.phone = req.body.phone;
   var staff = req.body.isStaff;
-  if(staff){
-      user.staff.isStaff = true;
-      user.staff.staffId = "00002"
-      user.privilege = req.body.privilege
-  }else{
-      user.staff.isStaff = false;
-  }
+       
+  user.staff.isStaff = true;
+  user.staff.privilege = req.body.privilege;
+//  if(staff){
+//      user.staff.isStaff = true;
+//      user.staff.staffId = "00002";
+//      user.privilege = req.body.privilege;
+//  }else{
+//      user.staff.isStaff = false;
+//  }
   user.sex = req.body.sex;
   user.dob = req.body.dob;
   user.country = req.body.country;
 
-  user.setPassword(req.body.password)
+  var pass = random();  
+  user.setPassword(pass)
 
   user.save(function (err){
     if(err){ 
+        console.log("The Error "+err);
         return next(err); 
     }
-
+    
+    var message = "Dear "+req.body.firstName+", \nYou are welcome to Chesney Hotel as one of our staffs. \n\
+                    Please find your password below and please change this password immediately.\n\
+                    \n\n password : "+pass;
+        sendMail("Welcome to Chesney Hotel", message, req.body.email);
     return res.json({status:1, token: user.generateJWT()})
   });
 });
 
 
-app.post('/api/login', function(req, res, next){
+app.post('/api/login', function(req, res, next){  
   if(!req.body.username || !req.body.password){
     return res.status(400).json({message: 'Please fill out all fields'});
   }
@@ -464,6 +516,9 @@ app.get('/api/op/create/book', function(req, res, next){
     var Book = require('./model/booking');
     var book = new Book();
     var q = req.query;
+    var isCoperate = JSON.parse(q.isCoperate);
+    var coperateId = q.coperateId;
+    
     book.status = q.status;
     book.room = q.room;
     book.channel = q.channel; /* any of online, web, frontDesk*/
@@ -473,11 +528,10 @@ app.get('/api/op/create/book', function(req, res, next){
     book.checkIn = q.checkIn;
     book.checkOut = q.checkOut;
     var che = q.isCheckIn;
-
+    
     book.arrival=book.checkIn;
     if (che==="true") {
         book.isCheckIn = true;
-        
     }
 //    book.guestId = q.phone;
     book.guest.firstName = q.firstName;
@@ -485,13 +539,30 @@ app.get('/api/op/create/book', function(req, res, next){
     book.guest.phone = q.phone;
 //    recordTrans(q.status+ ' ',q.amount,0,0,q.amount,book.guest,q.performedBy);
 //    (desc,amount,discount,tax,total,paid,guest,performedBy)
-    createGuest (q,function (data){
-        var folio = {amount : -1*q.amount, guestId : data._id, guest : data, performedBy : q.performedBy};
-        recordFolio(folio,function(data){
-            
+
+    if(isCoperate){
+        var guest = {
+            name: {
+                firstName: q.firstName,
+                lastName: q.lastName
+            },
+            phone: q.phone,
+        };
+        
+        var folio = {amount: -1 * q.amount, guestId: coperateId, guest: guest, performedBy: q.performedBy};
+        recordFolio(folio, function (data) {
+
         });
         
-    });
+    }else{
+        createGuest(q, function (data) {
+            var folio = {amount: -1 * q.amount, guestId: data._id, guest: data, performedBy: q.performedBy};
+            recordFolio(folio, function (data) {
+                
+            });
+        });
+    }
+    
     
     changeRoomBookStatus(q.room, q.status,function(data){});
  
@@ -635,6 +706,7 @@ var createGuest = function (q, callback) {
     gue.email = q.email;
     gue.phone = q.phone;
     gue.address = q.address;
+    gue.discount = q.discount;
     
 //    gue.save({ upsert : true },function (err, data) {
 //        if (err) {
@@ -657,7 +729,7 @@ recordFolio = function (q, callback) {
         
     var Coll = require('./model/folio');
     
-    Coll.findOne({"guest.phone": q.guest.phone}, function (err, data) {
+    Coll.findOne({$or :[{"guest.phone": q.guest.phone },{"guest.guestId": q.guest.guestId }]}, function (err, data) {
 //    Coll.findOne({_id: q.id}, function (err, data) {
                   
         if (data === null || data=== undefined) {
@@ -670,8 +742,8 @@ recordFolio = function (q, callback) {
                 if (err) {
                     return next(err);
                 }
-                
             });
+            
         } else {
 
             data.balance += JSON.parse(q.amount);
@@ -1348,42 +1420,150 @@ app.get('/api/op/edit/reminder', function(req, res, next){
 });
 
 // account
-app.get('/api/op/create/account', function (req, res, next) {
-    var Coll = require('./model/account');
-    var c = new Coll();
-    var q = req.query;
-
-    c.alis=q.alis;
-    c.accountName=q.accountName;
-    c.accountType=q.accountType;
-    c.firstName=q.firstName;
-    c.lastName=q.lastName;
-    c.address.one=q.address_one;
-    c.address.two=q.address_two;
-    c.city=q.city;
-    c.zip=q.zip;
-    c.state=q.state;
-    c.country=q.country;
-    c.email=q.email;
-    c.website=q.website;
-    c.rep = q.rep;
-    c.cred.accountNo=q.cred_accountNo;
-    c.cred.creditLimit=q.cred_creditLimit;
-    c.cred.openBalance=q.cred_openBalance;
-    c.cred.paymentTerm=q.cred_paymentTerm;
-    c.performedBy = q.performedBy;
+var createCoperateGuest = function (q,res, next) {
+    //    var Guest = require('./model/guest');
+    var Guest = require('./model/guest');
+    var gue = new Guest();
+//    gue = {};
+//    gue.name = {};
+    gue.name.lastName = q.lastName;
+    gue.name.firstName = q.firstName;
+    gue.email = q.email;
+    gue.phone = q.phone;
+    gue.address = q.address_one;
     
-    c.save(function (err, data) {
+    gue.discount = q.discount;
+    gue.isCoperate = true;
+        
+    gue.coperate.alis=q.alis;
+    gue.coperate.accountName=q.accountName;
+    gue.coperate.address.one = q.address_one;
+    gue.coperate.address.two = q.address_two;
+
+    gue.coperate.city=q.city;
+    gue.coperate.zip=q.zip;
+    gue.coperate.state=q.state;
+    gue.coperate.country=q.country;
+    gue.coperate.email=q.email;
+    gue.coperate.phone = q.phone;
+    gue.coperate.website=q.website;
+    gue.coperate.rep = q.rep;
+    
+//    gue.coperate.cred.accountNo=q.cred_accountNo;
+    gue.coperate.cred.creditLimit=q.cred_creditLimit;
+    gue.coperate.cred.openBalance=q.cred_openBalance;
+    gue.coperate.cred.paymentTerm=q.cred_paymentTerm;
+    
+ 
+//    gue.accountType=q.accountType;
+    gue.performedBy = q.performedBy;
+//   
+//    isCoperate : boolean, 
+//    coperate : {
+//        address: {
+//            one : String,
+//            two : String
+//        },
+//        city : String,
+//        zip : String,
+//        state : String,
+//        country : String,
+//        email : String,
+//        phone : String,
+//        website : String,
+//        rep :  {type : mongoose.Schema.Types.ObjectId , ref : 'User'},
+//        cred : {
+//            accountNo : String,
+//            creditLimit : Number,
+//            openBalance : Number,
+//            paymentTerm : String
+//        },
+//    }
+    
+//        c.alis=q.alis;
+//    c.accountName=q.accountName;
+//    c.accountType=q.accountType;
+//    c.firstName=q.firstName;
+//    c.lastName=q.lastName;
+//    c.address.one=q.address_one;
+//    c.address.two=q.address_two;
+//    c.city=q.city;
+//    c.zip=q.zip;
+//    c.state=q.state;
+//    c.country=q.country;
+//    c.email=q.email;
+//    c.phone = q.phone;
+//    c.website=q.website;
+//    c.rep = q.rep;
+//    c.cred.accountNo=q.cred_accountNo;
+//    c.cred.creditLimit=q.cred_creditLimit;
+//    c.cred.openBalance=q.cred_openBalance;
+//    c.cred.paymentTerm=q.cred_paymentTerm;
+//    c.performedBy = q.performedBy;
+    
+    gue.save({ upsert : true },function (err, data) {
         if (err) {
-            return next(err);
+            
+            console.log("THE ERRIFIICCCCCC"+err);
+            return res.json({status: 0, message: err});
+//            return next(err);
         }
-        return res.json({status: 1, message: data})
+        else{return res.json({status: 1, message: data});}
     });
+    
+    
+    
+//    var ret;
+//    Guest.findOneAndUpdate({ phone: q.phone }, gue, { upsert : true, new: true }, function (err, data) {
+//        if (err) {
+////            return next(err);
+//            console.log(err);
+//        }
+//        console.log(data);
+//        return callback(data);
+//    });
+//    return ret;
+}
+
+
+app.get('/api/op/create/account', function (req, res, next) {
+//    var Coll = require('./model/account');
+//    var c = new Coll();
+    var q = req.query;
+    createCoperateGuest(q,res);
+
+//    c.alis=q.alis;
+//    c.accountName=q.accountName;
+//    c.accountType=q.accountType;
+//    c.firstName=q.firstName;
+//    c.lastName=q.lastName;
+//    c.address.one=q.address_one;
+//    c.address.two=q.address_two;
+//    c.city=q.city;
+//    c.zip=q.zip;
+//    c.state=q.state;
+//    c.country=q.country;
+//    c.email=q.email;
+//    c.phone = q.phone;
+//    c.website=q.website;
+//    c.rep = q.rep;
+//    c.cred.accountNo=q.cred_accountNo;
+//    c.cred.creditLimit=q.cred_creditLimit;
+//    c.cred.openBalance=q.cred_openBalance;
+//    c.cred.paymentTerm=q.cred_paymentTerm;
+//    c.performedBy = q.performedBy;
+//    
+//    c.save(function (err, data) {
+//        if (err) {
+//            return next(err);
+//        }
+//        return res.json({status: 1, message: data})
+//    });
 });
 
 app.get('/api/op/fetch/account', function(req, res, next){
-  var Coll = require('./model/account');
-    Coll.find().exec( function (err, data) {
+  var Coll = require('./model/guest');
+    Coll.find({}).exec( function (err, data) {
         if (err) {
             return next(err);
         }
@@ -1421,6 +1601,7 @@ app.get('/api/op/edit/account', function(req, res, next){
     c.state=q.state;
     c.country=q.country;
     c.email=q.email;
+    c.phone = q.phone;
     c.website=q.website;
     c.rep = q.rep;
     c.cred={};

@@ -1,5 +1,5 @@
 {
-  "name": "PurpleCamel",
+  "name": "HotelManagementServer",
   "version": "0.0.0",
   "private": true,
   "scripts": {
@@ -29,6 +29,7 @@
     "jsonwebtoken" : "",
     "browser-sync":"",
     "mongoose-auto-increment":"",
-    "node-schedule":""
+    "node-schedule":"",
+    "emailjs" : ""
   }
 }
