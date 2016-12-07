@@ -9,7 +9,7 @@ var bookingSchema = new Schema({
   channel : String /* any of mobile,online, web, frontDesk*/,
   performedBy : {type : mongoose.Schema.Types.ObjectId , ref : 'User'},
 //  customer : {type : mongoose.Schema.Types.ObjectId , ref : 'User'}, // Useful for a sign up customers
-  guestObject : {type : mongoose.Schema.Types.ObjectId , ref : 'Guest'},
+  guestId : {type : mongoose.Schema.Types.ObjectId , ref : 'Guest'},
   guest : {
       firstName : String,
       lastName : String ,

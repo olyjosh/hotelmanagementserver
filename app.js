@@ -517,7 +517,7 @@ app.get('/api/op/create/book', function(req, res, next){
     var book = new Book();
     var q = req.query;
     var isCoperate = JSON.parse(q.isCoperate);
-    var coperateId = q.coperateId;
+    
     
     book.status = q.status;
     book.room = q.room;
@@ -541,6 +541,8 @@ app.get('/api/op/create/book', function(req, res, next){
 //    (desc,amount,discount,tax,total,paid,guest,performedBy)
 
     if(isCoperate){
+        var coperateId = q.coperateId;
+        book.guestId = coperateId;
         var guest = {
             name: {
                 firstName: q.firstName,
@@ -556,6 +558,7 @@ app.get('/api/op/create/book', function(req, res, next){
         
     }else{
         createGuest(q, function (data) {
+            book.guestId = data._id
             var folio = {amount: -1 * q.amount, guestId: data._id, guest: data, performedBy: q.performedBy};
             recordFolio(folio, function (data) {
                 
