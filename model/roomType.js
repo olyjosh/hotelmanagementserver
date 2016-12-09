@@ -17,7 +17,8 @@ var roomTypeSchema = new Schema({
       maxAdult : Number,
       maxChild : Number
   },
-  displayColor : String
+  displayColor : String,
+  images: [String]
 },{timestamps: true});
 
 var mod = mongoose.model('RoomType', roomTypeSchema);

@@ -389,7 +389,7 @@ app.get('/api/op/delete/room', function(req, res, next){
     var id = req.query.id;
     var Post = require('./model/facility');
 
-    Post.find({id: id}).remove(function (err) {
+    Post.find({_id: id}).remove(function (err) {
         if (err)
             throw err
 //        respon = {status: 1};
@@ -433,6 +433,23 @@ app.get('/api/op/fetch/floor', function(req, res, next){
 });
 
 app.get('/api/op/edit/floor', function(req, res, next){
+    
+        
+    var Coll = require('./model/floors');
+    var c = {};//new Coll();
+    var q = req.query;
+                
+    c.alias = q.alias;
+    c.name = q.name;
+    c.desc = q.desc;
+        
+    Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
+        if (err) {
+            return res.json({status: 0, message: err})
+        }
+        console.log(data);
+        return res.json({status: 1, message: data});
+    });
   
 });
 
@@ -440,7 +457,7 @@ app.get('/api/op/delete/floor', function (req, res, next) {
     var floorId = req.query.id;
     var Post = require('./model/floors');
 
-    Post.find({id: floorId}).remove(function (err) {
+    Post.find({_id: floorId}).remove(function (err) {
         if (err)
             throw err
         respon = {status: 1};
@@ -471,6 +488,7 @@ app.get('/api/op/create/roomtype', function(req, res, next){
     roomType.pax.maxAdult = q.pax_maxAdult;
     roomType.pax.maxChild = q.pax_maxChild
     roomType.displayColor = q.color
+    roomType.images = JSON.parse(q.images);
 
     roomType.save(function (err, data) {
         if (err) { 
@@ -493,13 +511,43 @@ app.get('/api/op/fetch/roomtype', function(req, res, next){
 
 app.get('/api/op/edit/roomtype', function(req, res, next){
     
+    var Coll = require('./model/roomType');
+    var c = {};//new Coll();
+    var q = req.query;
+                
+    c.alias = q.alias;
+    c.name = q.name;
+    c.desc = q.desc;
+
+    c.rate = {};
+    c.rate.rate = q.rate_rate;
+    c.rate.adult = q.rate_adult;
+    c.rate.child = q.rate_child;
+    c.rate.overBookingPercentage = q.rate_overBookingPercentage;
+
+    c.pax = {};
+    c.pax.baseAdult = q.pax_baseAdult;
+    c.pax.baseChild = q.pax_baseChild;
+    c.pax.maxAdult = q.pax_maxAdult;
+    c.pax.maxChild = q.pax_maxChild
+    c.displayColor = q.color
+    c.images = JSON.parse(q.images);
+        
+    Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
+        if (err) {
+            return res.json({status: 0, message: err})
+        }
+        console.log(data);
+        return res.json({status: 1, message: data});
+    });
+    
 });
 
 app.get('/api/op/delete/roomtype', function (req, res, next) {
     var id = req.query.id;
     var Coll = require('./model/roomType');
 
-    Coll.find({id: id}).remove(function (err) {
+    Coll.find({_id: id}).remove(function (err) {
         if (err)
             throw err
         respon = {status: 1};
@@ -591,7 +639,7 @@ app.post('/api/op/create/payment', function(req, res, next){
 pay = function(req, res, next){
     var q = req.body;
 
-    console.log("The query :"+JSON.stringify(q))
+    console.log("The query :"+JSON.stringify(q));
     var Coll = require('./model/payment');
     var c = new Coll();
     c.amount = q.amount;

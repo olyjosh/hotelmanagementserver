@@ -1,6 +1,6 @@
 
 var mongoose = require('mongoose');
-var k = require('./const')
+var k = require('./const');
 var Schema = mongoose.Schema;
 require('./floors');
 require('./roomType');
