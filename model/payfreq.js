@@ -4,7 +4,6 @@ var autoIncrement = require('mongoose-auto-increment');
 
 var sch = new Schema({
   freq : Number,
-
   performedBy: {type : mongoose.Schema.Types.ObjectId , ref : 'User'}
 },{timestamps: true});
 
