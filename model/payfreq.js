@@ -3,7 +3,7 @@ var Schema = mongoose.Schema;
 var autoIncrement = require('mongoose-auto-increment');
 
 var sch = new Schema({
-  freq : Number,
+  freq : String,
   performedBy: {type : mongoose.Schema.Types.ObjectId , ref : 'User'}
 },{timestamps: true});
 

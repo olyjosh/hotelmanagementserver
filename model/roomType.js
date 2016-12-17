@@ -6,6 +6,7 @@ var roomTypeSchema = new Schema({
   name: String,
   desc: String,
   rate: {
+      cost : Number,
       rate : Number,
       adult : Number,
       child : Number,

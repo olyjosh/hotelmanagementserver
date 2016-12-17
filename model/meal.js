@@ -5,6 +5,7 @@ var MealSchema = new Schema({
     name : String,
     desc : String,
     img : String,
+    cost: Number,
     price : Number,
     video : String, /* This is the link to the preparations video if any */
     article : String, /* can be website link*/ 

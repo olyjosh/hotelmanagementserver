@@ -135,6 +135,7 @@ var verifyAuth = function (req, res, next) {
                         // You can also do stuff with the decoded token
                         next();
                     }
+                    //
                 });
     }else{
         next();
@@ -443,13 +444,23 @@ app.get('/api/op/edit/floor', function(req, res, next){
     c.name = q.name;
     c.desc = q.desc;
         
+        
     Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
         if (err) {
+            console.log();
             return res.json({status: 0, message: err})
         }
         console.log(data);
         return res.json({status: 1, message: data});
     });
+//        
+//    Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
+//        if (err) {
+//            return res.json({status: 0, message: err})
+//        }
+//        console.log(data);
+//        return res.json({status: 1, message: data});
+//    });
   
 });
 
@@ -478,6 +489,7 @@ app.get('/api/op/create/roomtype', function(req, res, next){
     roomType.name = q.name;
     roomType.desc = q.desc;
 
+    roomType.rate.cost = q.rate_cost;  // this will be useful for profitability calculations
     roomType.rate.rate = q.rate_rate;
     roomType.rate.adult = q.rate_adult;
     roomType.rate.child = q.rate_child;
@@ -520,6 +532,7 @@ app.get('/api/op/edit/roomtype', function(req, res, next){
     c.desc = q.desc;
 
     c.rate = {};
+    c.rate.cost = q.rate_cost; 
     c.rate.rate = q.rate_rate;
     c.rate.adult = q.rate_adult;
     c.rate.child = q.rate_child;
@@ -1829,9 +1842,7 @@ app.get('/api/op/edit/workorder', function(req, res, next){
 
     Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
         if (err) {
-
             console.log();
-//            return next(err);
             return res.json({status: 0, message: err})
         }
         console.log(data);
@@ -2168,6 +2179,7 @@ app.get('/api/op/edit/food', function(req, res, next){
     c.name = q.name;
     c.desc = q.desc;
     c.img = q.img;
+    c.cost = q.cost;
     c.price=q.price;
     if(q.video!==undefined)c.video=q.video;
     if(q.article!==undefined)c.article=q.article;
@@ -2349,6 +2361,7 @@ app.get('/api/op/create/drink', function (req, res, next) {
     var q = req.query;
     c.name = q.name;
     c.desc = q.desc;
+    c.cost = q.cost;
     c.img = q.img;
     c.price=q.price;
     if(q.video!==undefined)c.video=q.video;
@@ -2609,6 +2622,125 @@ app.get('/api/op/fetch/foliodetail', function(req, res, next){
 //    var q = req.query;
 //    recordFolio(res, q);
 //});
+
+
+
+// Seasons and rate setting
+
+//payhead
+app.get('/api/op/create/season', function (req, res, next) {
+    var Coll = require('./model/seasons');
+    var c = new Coll();
+    var q = req.query;
+
+    c.alias = q.alias;
+    c.name = q.name;
+    c.desc = q.desc;
+    c.from = q.from
+    c.to = q.to;
+//    c.data = JSON.parse(q.data);
+    c.performedBy = q.performedBy;
+        
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
+    });
+});
+
+app.get('/api/op/fetch/season', function(req, res, next){
+  var Coll = require('./model/seasons');
+    Coll.find().exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
+
+
+app.get('/api/op/delete/season', function(req, res, next){
+    var Coll = require('./model/seasons');
+    Coll.find({_id: req.query.id}).remove(function (err) {
+        if (err)
+            throw err
+        respon = {status: 1};
+        res.send(JSON.stringify(respon));
+    })
+    
+});
+
+app.get('/api/op/edit/season', function(req, res, next){
+    var Coll = require('./model/seasons');
+    var c = {};//new Coll();
+    var q = req.query;
+ 
+    c.alias = q.alias;
+    c.name = q.name;
+    c.desc = q.desc;
+    c.from = q.from
+    c.to = q.to;
+    c.data = JSON.parse(q.data);
+    c.performedBy = q.performedBy;
+ 
+    Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
+        if (err) {
+
+            console.log();
+//            return next(err);
+            return res.json({status: 0, message: err})
+        }
+        console.log(data);
+        return res.json({status: 1, message: data});
+    });
+});
+
+
+app.get('/api/op/fetch/normalprices', function(req, res, next){
+    fetchRoomPrice(res);
+});
+
+function fetchRoomPrice(res){
+    roomPrices(res);
+}
+
+
+
+function roomPrices(res){
+    var Coll = require('./model/roomType');
+    Coll.find().select('_id name rate').exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        var x = {};
+        x.rooms = data;
+        mealPrices(res,x);  //return res.json({status:1, message : data});
+    });
+    
+}
+
+function mealPrices(res, x){
+    var Coll = require('./model/meal');
+    Coll.find().select('_id name price').exec(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        x.meals=data;
+        drinkPrices(res, x);  //return res.json({status:1, message : data});
+    });
+}
+
+function drinkPrices(res, x){
+    var Coll = require('./model/drink');
+    Coll.find().select('_id name price').exec(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        x.drinks=data;
+        return res.json({status:1, message : x});
+    });
+}
 
 
 /**************************************************************************
@@ -2872,12 +3004,65 @@ app.get('/api/op/edit/salary', function(req, res, next){
     });
 });
 
+//Inventory
+app.get('/api/op/create/invcategory', function (req, res, next) {
+    var Coll = require('./model/invCategory');
+    var c = new Coll();
+    var q = req.query;
+    c.companyName = q.companyName;
+    c.contactPerson = q.contactPerson;
+    c.category = q.category;
+    c.performedBy = q.performedBy;
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
+    });
+});
+
+app.get('/api/op/fetch/invcategory', function(req, res, next){
+  var Coll = require('./model/invCategory');
+    Coll.find().exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
 
 
+app.get('/api/op/delete/invcategory', function(req, res, next){
+    var Coll = require('./model/invCategory');
+    Coll.find({_id: req.query.id}).remove(function (err) {
+        if (err)
+            throw err
+        respon = {status: 1};
+        res.send(JSON.stringify(respon));
+    })
+    
+});
 
+app.get('/api/op/edit/invcategory', function(req, res, next){
+    var Coll = require('./model/invCategory');
+    var c = {};//new Coll();
+    var q = req.query;
 
+    c.companyName = q.companyName;
+    c.contactPerson = q.contactPerson;
+    c.category = q.category;
+    c.performedBy = q.performedBy;
 
-
+    Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
+        if (err) {
+            console.log();
+//            return next(err);
+            return res.json({status: 0, message: err})
+        }
+        console.log(data);
+        return res.json({status: 1, message: data});
+    });
+});
 
 /****************************************************************************
  *
