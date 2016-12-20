@@ -3,12 +3,17 @@ var Schema = mongoose.Schema;
 var autoIncrement = require('mongoose-auto-increment');
 
 var sch = new Schema({
-    companyName : String,
-    contactPerson : String,
+    vendor : String,
     category : String,
+    itemName : String,
+    qty : Number,
+    free : String,
+    discount : Number,
+    mrp : String,
+    rate : Number,
     performedBy: {type : mongoose.Schema.Types.ObjectId , ref : 'User'}
 },{timestamps: true});
 
-sch.plugin(autoIncrement.plugin,'InvCategory');
-var mod = mongoose.model('InvCategory', sch);
+sch.plugin(autoIncrement.plugin,'InvItem');
+var mod = mongoose.model('InvItem', sch);
 module.exports = mod;

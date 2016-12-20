@@ -591,7 +591,7 @@ app.get('/api/op/create/book', function(req, res, next){
     var che = q.isCheckIn;
     
     book.arrival=book.checkIn;
-    if (che==="true") {
+    if (che ==="true") {
         book.isCheckIn = true;
     }
 //    book.guestId = q.phone;
@@ -2925,7 +2925,6 @@ app.get('/api/op/edit/payfreq', function(req, res, next){
 
     Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
         if (err) {
-
             console.log();
 //            return next(err);
             return res.json({status: 0, message: err})
@@ -3009,9 +3008,8 @@ app.get('/api/op/create/invcategory', function (req, res, next) {
     var Coll = require('./model/invCategory');
     var c = new Coll();
     var q = req.query;
-    c.companyName = q.companyName;
-    c.contactPerson = q.contactPerson;
-    c.category = q.category;
+    c.vendor = q.vendor;
+    c.catName = q.catName;
     c.performedBy = q.performedBy;
     c.save(function (err, data) {
         if (err) {
@@ -3048,9 +3046,162 @@ app.get('/api/op/edit/invcategory', function(req, res, next){
     var c = {};//new Coll();
     var q = req.query;
 
-    c.companyName = q.companyName;
-    c.contactPerson = q.contactPerson;
+    c.vendor = q.vendor;
+    c.catName = q.catName;
+    c.performedBy = q.performedBy;
+    
+    Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
+        if (err) {
+            console.log();
+//            return next(err);
+            return res.json({status: 0, message: err})
+        }
+        console.log(data);
+        return res.json({status: 1, message: data});
+    });
+});
+
+
+app.get('/api/op/create/invitem', function (req, res, next) {
+    var Coll = require('./model/invItem');
+    var c = new Coll();
+    var q = req.query;
+    
+    c.vendor =q.vendor;
     c.category = q.category;
+    c.itemName = q.itemName;
+    c.qty = q.qty;
+    c.free = q.free;
+    c.discount = q.discount;
+    c.mrp = q.mrp;
+    c.rate = q.rate;
+
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
+    });
+});
+
+app.get('/api/op/fetch/invitem', function(req, res, next){
+  var Coll = require('./model/invItem');
+    Coll.find().exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
+
+
+app.get('/api/op/delete/invitem', function(req, res, next){
+    var Coll = require('./model/invItem');
+    Coll.find({_id: req.query.id}).remove(function (err) {
+        if (err)
+            throw err
+        respon = {status: 1};
+        res.send(JSON.stringify(respon));
+    })
+    
+});
+
+app.get('/api/op/edit/invitem', function(req, res, next){
+    var Coll = require('./model/invItem');
+    var c = {};//new Coll();
+    var q = req.query;
+
+    c.vendor =q.vendor;
+    c.category = q.category;
+    c.itemName = q.itemName;
+    c.qty = q.qty;
+    c.free = q.free;
+    c.discount = q.discount;
+    c.mrp = q.mrp;
+    c.rate = q.rate;
+    c.performedBy = q.performedBy;
+
+    Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {
+        if (err) {
+            console.log();
+//            return next(err);
+            return res.json({status: 0, message: err})
+        }
+        console.log(data);
+        return res.json({status: 1, message: data});
+    });
+});
+
+
+//vendor
+app.get('/api/op/create/vendor', function (req, res, next) {
+    var Coll = require('./model/Vendor');
+    var c = new Coll();
+    var q = req.query;
+    
+    c.compName = q.compName;
+    c.compPhone = q.compPhone;
+    c.compPhone = q.compEmail;
+    c.country = q.country;
+    c.state = q.state;
+    c.city = q.city
+    c.contactPerson.name =q.contactName;
+    c.contactPerson.address = q.contactAdd;
+    c.contactPerson.phone = q.contactPhone;
+    c.bank.name = q.bankName
+    c.bank.branch = q.bankBranch;
+    c.bank.accountNo = q.accountNo;
+    c.bank.sortCode =q.sortCode;
+    c.performedBy = q.performedBy;
+
+    c.save(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status: 1, message: data})
+    });
+});
+
+app.get('/api/op/fetch/vendor', function(req, res, next){
+  var Coll = require('./model/Vendor');
+    Coll.find().exec( function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        return res.json({status:1, message : data});
+    });
+});
+
+
+app.get('/api/op/delete/vendor', function(req, res, next){
+    var Coll = require('./model/Vendor');
+    Coll.find({_id: req.query.id}).remove(function (err) {
+        if (err)
+            throw err
+        respon = {status: 1};
+        res.send(JSON.stringify(respon));
+    })
+    
+});
+
+app.get('/api/op/edit/vendor', function(req, res, next){
+    var Coll = require('./model/Vendor');
+    var c = {};//new Coll();
+    var q = req.query;
+
+    c.compName = q.compName;
+    c.compPhone = q.compPhone;
+    c.compPhone = q.compEmail;
+    c.country = q.country;
+    c.state = q.state;
+    c.city = q.city
+    c.contactPerson.name =q.contactName;
+    c.contactPerson.address = q.contactAdd;
+    c.contactPerson.phone = q.contactPhone;
+    c.bank.name = q.bankName
+    c.bank.branch = q.bankBranch;
+    c.bank.accountNo = q.accountNo;
+    c.bank.sortCode =q.sortCode;
     c.performedBy = q.performedBy;
 
     Coll.findOneAndUpdate({_id: q.id}, c, function (err, data) {

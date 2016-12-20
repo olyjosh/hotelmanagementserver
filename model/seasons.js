@@ -14,7 +14,7 @@ var sch = new Schema({
            adult : Number,
            children : Number,
         },
-        type : String  // This can be restaurant, BAr, laundry or room
+        type : Number  // This can be restaurant, bar, laundry or room
     }],
     performedBy : {type : mongoose.Schema.Types.ObjectId , ref : 'User'}
 },{timestamps: true});
